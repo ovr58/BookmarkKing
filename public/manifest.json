@@ -1,10 +1,76 @@
 {
-    "manifest_version": 3,
-    "name": "React Chrome Extension",
-    "version": "1.0.0",
-    "description": "A simple React app as a Chrome extension",
-    "action": {
-      "default_popup": "index.html"
+  "name": "BookmarkKing",
+  "version": "1.1.0",
+  "description": "All your video and podcast bookmarks in one place. Support for YouTube, Spotify, YouTube Music, Dzen, VKVideo... Add your platform, contact the developer...",
+  "default_locale": "en",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "https://open.spotify.com/*",
+    "https://*.youtube.com/*",
+    "https://music.youtube.com/*",
+    "https://*.vkvideo.ru/*",
+    "https://*.vk.com/*",
+    "https://*.dzen.ru/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content/content.ts"]
     },
-    "permissions": []
-  }
+    {
+      "matches": ["https://*.vkvideo.ru/*", "https://*.vk.com/*"],
+      "js": ["content/vkcontent.ts"]
+    },
+    {
+      "matches": ["https://*.dzen.ru/*"],
+      "js": ["content/dzencontent.ts"]
+    },
+    {
+      "matches": ["https://music.youtube.com/*"],
+      "js": ["content/ytmusicontent.ts"]
+    },
+    {
+      "matches": ["https://open.spotify.com/*"],
+      "js": ["content/spotifycontent.ts"]
+    },
+    {
+        "matches": ["<all_urls>"],
+        "exclude_matches": ["https://open.spotify.com/*", "https://music.youtube.com/*", "https://*.dzen.ru/*", "https://www.youtube.com/*", "https://*.vkvideo.ru/*", "https://*.vk.com/*"],
+        "js": ["content/cmncontent.ts"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/bookmark512x512.png",
+        "assets/play512x512.png",
+        "assets/delete512x512.png",
+        "assets/save512x512.png",
+        "assets/bookmark64x64.png",
+        "assets/play64x64.png",
+        "assets/delete64x64.png",
+        "assets/save64x64.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+      "16": "assets/bookmark64x64.png",
+      "48": "assets/bookmark64x64.png",
+      "128": "assets/bookmark64x64.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "assets/bookmark64x64.png",
+      "24": "assets/bookmark64x64.png",
+      "32": "assets/bookmark64x64.png"
+    },
+    "default_title": "Видео закладки",
+    "default_popup": "index.html"
+  },
+  "manifest_version": 3
+}
