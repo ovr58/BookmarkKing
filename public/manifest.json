@@ -69,7 +69,7 @@
       "24": "assets/bookmark64x64.png",
       "32": "assets/bookmark64x64.png"
     },
-    "default_title": "Видео закладки",
+    "default_title": "Video, Music and Podcasts Bookmark Extension",
     "default_popup": "index.html"
   },
   "manifest_version": 3

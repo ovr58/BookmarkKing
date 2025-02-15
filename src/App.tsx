@@ -1,33 +1,40 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import appLogo from '.assets/bookmark64x64.png'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+import { getTabId } from './utils'
 
+function App() {
+
+  const fetchAllowedUrls = () => {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(['allowedUrls'], (obj) => {
+            resolve(obj.allowedUrls)
+        })
+    })
+}
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div id="extensionName" className="title">
+        <span data-i18n="extensionName"></span>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div id="container" className="container">
+          <div>
+              <div id="videos" className="videoslist">
+                  <span className="title" data-i18n="videosSelectTitle"></span>
+                  <select id="dropdown" className="videosSelect" i18n-title="videosSelectTitle">
+                  
+                  </select>
+              </div>
+              <div id="setUpListContainer" className="setUpButtonContainer">
+                  
+              </div>
+              <div id="sliderContainer" className="sliderContainer">
+
+              </div>
+              <div id="listTitle" className="title"></div>
+              <div className="bookmarks" id="bookmarks"></div>
+          </div>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
