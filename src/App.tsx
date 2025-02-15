@@ -1,17 +1,16 @@
 import appLogo from '.assets/bookmark64x64.png'
 import './App.css'
 
-import { getTabId } from './utils'
+import { 
+  getCurrentTab, 
+  localizeContent, 
+  fetchAllowedUrls 
+} from './utils'
 
 function App() {
 
-  const fetchAllowedUrls = () => {
-    return new Promise((resolve) => {
-        chrome.storage.sync.get(['allowedUrls'], (obj) => {
-            resolve(obj.allowedUrls)
-        })
-    })
-}
+  
+  
   return (
     <>
       <div id="extensionName" className="title">

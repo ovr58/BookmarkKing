@@ -17,3 +17,33 @@ export function localizeContent() {
         }
     })
 }
+
+export function fetchAllowedUrls() {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(['allowedUrls'], (obj) => {
+            resolve(obj.allowedUrls)
+        })
+    })
+}
+
+export function getUrlParams(url: string, allowedUrls: string[]): string | null {
+    let urlParams: string | null = null;
+    if (url.includes('www.youtube.com/watch')) {
+        const queryParam = url.split('?')[1];
+        urlParams = new URLSearchParams(queryParam).get('v');
+    } else if (/vk(video\.ru|\.com)\/video/.test(url)) {
+        urlParams = url.split('/video-')[1];
+    } else if (url.includes('dzen.ru')) {
+        urlParams = url.split('watch/')[1];
+    } else if (url.includes('music.youtube')) {
+        const queryParam = url.split('?')[1];
+        urlParams = new URLSearchParams(queryParam).get('v');
+    } else if (url.includes('open.spotify.com')) {
+        urlParams = 'spotify';
+    } else if (allowedUrls && allowedUrls.includes(url)) {
+        urlParams = url;
+    } else if (url.includes('//extensions') || url.includes('chrome://') || url.includes('edge://') || url.includes('opera://') || url.includes('brave://') || url.includes('vivaldi://') || url.includes('yandex://')) {
+        urlParams = 'technical';
+    }
+    return urlParams;
+}

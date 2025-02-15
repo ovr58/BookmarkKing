@@ -1,6 +1,5 @@
-import { getCurrentTab } from "./utils";
+import { getCurrentTab, localizeContent, fetchAllowedUrls, getUrlParams } from "./utils";
 
-export async function getTabId() {
-    const tab = await getCurrentTab()
-    return tab.id
-}
+export { getCurrentTab, localizeContent, fetchAllowedUrls, getUrlParams }
+
+
