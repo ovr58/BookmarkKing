@@ -4,12 +4,14 @@ export async function getCurrentTab() {
 }
 
 export function localizeContent() {
-    const elements = [...document.querySelectorAll('[i18n]'), ...document.querySelectorAll('[i18n-title]')]
+    const elements = [...document.querySelectorAll('[data-i18n]'), ...document.querySelectorAll('[i18n-title]')]
     elements.forEach(element => {
-        let key = element.getAttribute('i18n') 
+        let key = element.getAttribute('data-i18n') 
         if (!key) {
-            key = element.getAttribute('i18n-title') || ''
-            (element as HTMLElement).title = chrome.i18n.getMessage(key);
+            key = element.getAttribute('i18n-title');
+            if (key) {
+                (element as HTMLElement).title = chrome.i18n.getMessage(key);
+            }
         } else {
             element.textContent = chrome.i18n.getMessage(key)
         }
