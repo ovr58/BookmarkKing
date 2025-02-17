@@ -7,7 +7,7 @@ interface ScriptResult {
     result: string | null;
 }
 
-interface VideoElementInfo {
+export interface VideoElementInfo {
     id: string;
     class: string;
     title?: string;
@@ -66,16 +66,16 @@ export function fetchBookmarks(id: string) {
 })
 }
 
-export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[][]> {
+export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]> {
     return new Promise((resolve) => {
         chrome.storage.sync.get(null, (obj: { [key: string]: string }) => {
             console.log('POPUP - Fetch Videos:', obj, id);
-            const videos: VideoElementInfo[][] = [];
+            let videos: VideoElementInfo[] = [];
             Object.keys(obj).forEach(key => {
                 const video: VideoElementInfo[] = JSON.parse(obj[key]);
                 console.log('POPUP - Video:', key, video);
                 if (key === id && video.length === 0) {
-                    const curVideo: VideoElementInfo[] = [{
+                    const curVideos: VideoElementInfo[] = [{
                         id: key,
                         class: '',
                         title: chrome.i18n.getMessage('currentVideo'),
@@ -87,7 +87,7 @@ export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]
                         },
                         duration: 0
                     }];
-                    videos.push(curVideo);
+                    videos = curVideos;
                 } else if (key !== id && video.length === 0) {
                     chrome.storage.sync.remove(key);
                 } else if (video.length > 0 && key !== 'allowedUrls') {

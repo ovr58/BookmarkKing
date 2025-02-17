@@ -1,4 +1,3 @@
-import appLogo from '.assets/bookmark64x64.png'
 import './App.css'
 
 import { 
@@ -7,11 +6,54 @@ import {
   fetchAllowedUrls, 
   getUrlParams,
   getSpotifyVideoId,
-  fetchBookmarks
+  fetchBookmarks,
+  fetchVideosWithBookmarks,
+  VideoElementInfo
 } from './utils'
 import { useEffect, useState } from 'react'
 
 function App() {
+
+  const currSesion = async () => {
+    try {
+      const currentTab = await getCurrentTab()
+      const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
+      if (currentTab.url && currentTab && currentTab.id !== undefined) {
+        let urlParams = getUrlParams(currentTab.url, allowedUrls)
+        if (urlParams === 'spotify') {
+          const spotifyVideoId = await getSpotifyVideoId({ ...currentTab, id: currentTab.id })
+          urlParams = spotifyVideoId ? spotifyVideoId : ''
+          console.log('POPUP - Spotify Video Id:', urlParams)
+          urlParams = urlParams.replace('https://open.spotify.com/', '')
+        } else {
+          urlParams = ''
+        }
+        const videoBookmarks = await fetchBookmarks(urlParams)
+        return  {
+          ...videoElementInfo,
+          id: urlParams,
+          bookmarks: videoBookmarks as {
+            id: string;
+            time: number;
+            urlTemplate?: string;
+            title: string;
+            bookMarkCaption: string;
+          }[]
+        }
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+    return videoElementInfo
+  }
+
+  const curVideosWithBookmarks = async (id: string) => {
+    const videos = await fetchVideosWithBookmarks(id)
+    console.log('POPUP - Videos:', videos)
+    return videos
+  }
+
+  const [videos, setVideos] = useState<VideoElementInfo[]>([])
 
   const [videoElementInfo, setVideoELement] = useState({
     id: '',
@@ -31,45 +73,24 @@ function App() {
       urlTemplate?: string;
       title: string; 
       bookMarkCaption: string
-    }[] | null | undefined
+    }[]
   })
 
+  const [prevVideoId, setPrevVideoId] = useState('')
   
 
   useEffect(() => {
     localizeContent()
-    const currSesion = async () => {
-      try {
-        const currentTab = await getCurrentTab()
-        const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
-        if (currentTab.url && currentTab && currentTab.id !== undefined) {
-          let urlParams = getUrlParams(currentTab.url, allowedUrls)
-          if (urlParams === 'spotify') {
-            const spotifyVideoId = await getSpotifyVideoId({ ...currentTab, id: currentTab.id })
-            urlParams = spotifyVideoId ? spotifyVideoId : ''
-            console.log('POPUP - Spotify Video Id:', urlParams)
-            urlParams = urlParams.replace('https://open.spotify.com/', '')
-          } else {
-            urlParams = ''
-          }
-          const videoBookmarks = await fetchBookmarks(urlParams)
-          setVideoELement({
-            ...videoElementInfo,
-            id: urlParams,
-            bookmarks: videoBookmarks as {
-              id: string;
-              time: number;
-              urlTemplate?: string;
-              title: string;
-              bookMarkCaption: string;
-            }[]
-          })
-        }
-      } catch (error) {
-        console.error('Error:', error)
-      }
-    }
-    currSesion()
+    curVideosWithBookmarks(videoElementInfo.id).then(async (videos) => {
+      return currSesion().then((videoElementInfo) => {
+        return {videos, videoElementInfo}
+      })
+    }).then(({videos, videoElementInfo}) => {
+      setVideos(videos)
+      setVideoELement(videoElementInfo)
+    }).catch((error) => {
+      console.error('Error:', error)
+    })
   }, [])
   
   return (
@@ -79,12 +100,19 @@ function App() {
       </div>
       <div id="container" className="container">
           <div>
+            {
+              videoElementInfo.bookmarks.length > 0 && 
               <div id="videos" className="videoslist">
-                  <span className="title" data-i18n="videosSelectTitle"></span>
-                  <select id="dropdown" className="videosSelect" i18n-title="videosSelectTitle">
-                  
-                  </select>
-              </div>
+                <span className="title" data-i18n="videosSelectTitle"></span>
+                <select id="dropdown" className="videosSelect" i18n-title="videosSelectTitle">
+                  {videoElementInfo.bookmarks.map((bookmark, index) => {
+                    return (
+                      <option 
+                        key={index} value={bookmark.id}>{bookmark.title}</option>
+                    )
+                  })}
+                </select>
+              </div>}
               <div id="setUpListContainer" className="setUpButtonContainer">
                   
               </div>

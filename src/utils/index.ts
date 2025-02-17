@@ -10,7 +10,7 @@ import {
     openVideo,
     onPlay,
     onDelete,
-
+    type VideoElementInfo,
 } from "./utils";
 
 export { 
@@ -25,6 +25,7 @@ export {
     openVideo,
     onPlay,
     onDelete,
+    VideoElementInfo,
 }
 
 
