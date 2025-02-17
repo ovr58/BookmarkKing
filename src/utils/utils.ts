@@ -7,9 +7,27 @@ interface ScriptResult {
     result: string | null;
 }
 
-interface Video {
-    videoId: string;
-    title: string;
+interface VideoElementInfo {
+    id: string;
+    class: string;
+    title?: string;
+    urlTemplate?: string;
+    rect: {
+        width: number;
+        height: number;
+        top: number;
+        left: number;
+    };
+    duration: number;
+}
+
+interface ScriptResultWithVideoElement {
+    frameId: number;
+    result: VideoElementInfo[] | null;
+}
+
+interface PopUpEvent extends Event {
+    target: HTMLButtonElement & EventTarget;
 }
 
 export async function getCurrentTab() {
@@ -40,38 +58,54 @@ export function fetchAllowedUrls() {
     })
 }
 
-export function fetchBookmarks(videoId: string) {
+export function fetchBookmarks(id: string) {
     return new Promise((resolve) => {
-    chrome.storage.sync.get([videoId], (obj) => {
-        resolve(obj[videoId] ? JSON.parse(obj[videoId]) : [])
-    })
+    id !== '' ? chrome.storage.sync.get([id], (obj) => {
+        resolve(obj[id] ? JSON.parse(obj[id]) : [])
+    }) : resolve([])
 })
 }
 
-export function fetchVideosWithBookmarks(videoId: string): Promise<Video[][]> {
+export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[][]> {
     return new Promise((resolve) => {
         chrome.storage.sync.get(null, (obj: { [key: string]: string }) => {
-            console.log('POPUP - Fetch Videos:', obj, videoId);
-            const videos: Video[][] = [];
+            console.log('POPUP - Fetch Videos:', obj, id);
+            const videos: VideoElementInfo[][] = [];
             Object.keys(obj).forEach(key => {
-                const video: Video[] = JSON.parse(obj[key]);
+                const video: VideoElementInfo[] = JSON.parse(obj[key]);
                 console.log('POPUP - Video:', key, video);
-                if (key === videoId && video.length === 0) {
-                    const curVideo: Video[] = [{
-                        videoId: key,
-                        title: chrome.i18n.getMessage('currentVideo')
+                if (key === id && video.length === 0) {
+                    const curVideo: VideoElementInfo[] = [{
+                        id: key,
+                        class: '',
+                        title: chrome.i18n.getMessage('currentVideo'),
+                        rect: {
+                            width: 0,
+                            height: 0,
+                            top: 0,
+                            left: 0
+                        },
+                        duration: 0
                     }];
                     videos.push(curVideo);
-                } else if (key !== videoId && video.length === 0) {
+                } else if (key !== id && video.length === 0) {
                     chrome.storage.sync.remove(key);
                 } else if (video.length > 0 && key !== 'allowedUrls') {
                     videos.push(video);
                 }
             });
-            if (!Object.keys(obj).includes(videoId) && videoId) {
-                const curVideo: Video[] = [{
-                    videoId: videoId,
-                    title: chrome.i18n.getMessage('currentVideo')
+            if (!Object.keys(obj).includes(id) && id) {
+                const curVideo: VideoElementInfo[] = [{
+                    id: id,
+                    class: '',
+                    title: chrome.i18n.getMessage('currentVideo'),
+                    rect: {
+                        width: 0,
+                        height: 0,
+                        top: 0,
+                        left: 0
+                    },
+                    duration: 0
                 }];
                 videos.push(curVideo);
             }
@@ -80,18 +114,18 @@ export function fetchVideosWithBookmarks(videoId: string): Promise<Video[][]> {
     });
 }
 
-export function getUrlParams(url: string, allowedUrls: string[]): string | null {
-    let urlParams: string | null = null;
+export function getUrlParams(url: string, allowedUrls: string[] | ''): string {
+    let urlParams: string = '';
     if (url.includes('www.youtube.com/watch')) {
         const queryParam = url.split('?')[1];
-        urlParams = new URLSearchParams(queryParam).get('v');
+        urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (/vk(video\.ru|\.com)\/video/.test(url)) {
         urlParams = url.split('/video-')[1];
     } else if (url.includes('dzen.ru')) {
         urlParams = url.split('watch/')[1];
     } else if (url.includes('music.youtube')) {
         const queryParam = url.split('?')[1];
-        urlParams = new URLSearchParams(queryParam).get('v');
+        urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
     } else if (allowedUrls && allowedUrls.includes(url)) {
@@ -120,4 +154,84 @@ export async function getSpotifyVideoId(activeTab: ActiveTab): Promise<string | 
     }) as ScriptResult[];
     console.log('POPUP - Spotify Video Id:', results);
     return results.flatMap(result => result.result ?? null).filter(Boolean)[0];
+}
+
+export async function checkIfTabHasVideoElement(activeTab: ActiveTab): Promise<VideoElementInfo[]> {
+    const results = await chrome.scripting.executeScript({
+        target: { tabId: activeTab.id, allFrames: true },
+        func: (): VideoElementInfo[] => {
+            const videos = document.querySelectorAll('video');
+            console.log('POPUP - VIDEOS:', Array.from(videos));
+            return Array.from(videos).map(video => {
+                const rect = video.getBoundingClientRect();
+                return {
+                    id: video.id,
+                    class: video.className,
+                    rect: {
+                        width: rect.width,
+                        height: rect.height,
+                        top: rect.top,
+                        left: rect.left,
+                    },
+                    duration: video.duration
+                };
+            });
+        }
+    }) as ScriptResultWithVideoElement[];
+    console.log('POPUP - Check If Tab Has Video Element:', results);
+    return results.flatMap(result => result.result ?? []);
+}
+
+
+export async function openVideo({ id, urlTemplate }: VideoElementInfo): Promise<void> {
+    const url = `${urlTemplate}${id}`;
+    const urlWithAsterisk = urlTemplate ? urlTemplate.replace('https://', '*://').replace('www.', '*.') : '';
+
+    const tabs = await chrome.tabs.query({ url: `${urlWithAsterisk}${id}` });
+    if (tabs.length > 0) {
+        if (tabs[0].id !== undefined) {
+            chrome.tabs.update(tabs[0].id, { active: true });
+        }
+    } else {
+        chrome.tabs.create({ url });
+    }
+}
+
+export async function onPlay(event: PopUpEvent, id: string): Promise<void> {
+    const bookmarkTime = (event.target.parentNode?.parentNode as HTMLElement)?.getAttribute("timestamp");
+    const activeTab = await getCurrentTab();
+
+    if (activeTab?.id !== undefined && bookmarkTime !== null) {
+        chrome.tabs.sendMessage(activeTab.id, {
+            type: "PLAY",
+            value: bookmarkTime,
+            videoId: id
+        });
+    }
+}
+
+export async function onDelete(event: PopUpEvent, id: string): Promise<void> {
+    console.log('Delete Bookmark')
+    const activeTab = await getCurrentTab();
+    
+    const parentNode = event.target.parentNode;
+    const grandParentNode = parentNode?.parentNode as HTMLElement | null;
+    const bookmarkTime = grandParentNode?.getAttribute("timestamp");
+    const bookmarkElementToDelete = document.querySelector(`[timestamp="${bookmarkTime}"]`);
+    console.log('POPUP - BookMark Time to delete:', bookmarkElementToDelete)
+    if (bookmarkElementToDelete && bookmarkElementToDelete.parentNode) {
+        bookmarkElementToDelete.parentNode.removeChild(bookmarkElementToDelete);
+    }
+    
+    if (activeTab?.id !== undefined) {
+        chrome.tabs.sendMessage(activeTab.id, {
+            type: "DELETE",
+            value: bookmarkTime,
+            videoId: id
+        }, () => {
+            console.log('POPUP - Bookmark Deleted Callback Called')
+            const event = new Event('DOMContentLoaded');
+            document.dispatchEvent(event);
+        });
+    }
 }

@@ -1,5 +1,30 @@
-import { getCurrentTab, localizeContent, fetchAllowedUrls, getUrlParams } from "./utils";
+import { 
+    getCurrentTab, 
+    localizeContent, 
+    fetchAllowedUrls,
+    fetchBookmarks,
+    fetchVideosWithBookmarks, 
+    getUrlParams,
+    getSpotifyVideoId,
+    checkIfTabHasVideoElement,
+    openVideo,
+    onPlay,
+    onDelete,
 
-export { getCurrentTab, localizeContent, fetchAllowedUrls, getUrlParams }
+} from "./utils";
+
+export { 
+    getCurrentTab, 
+    localizeContent, 
+    fetchAllowedUrls, 
+    getUrlParams,
+    fetchBookmarks,
+    fetchVideosWithBookmarks,
+    getSpotifyVideoId,
+    checkIfTabHasVideoElement,
+    openVideo,
+    onPlay,
+    onDelete,
+}
 
 

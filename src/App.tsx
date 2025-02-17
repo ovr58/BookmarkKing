@@ -4,12 +4,73 @@ import './App.css'
 import { 
   getCurrentTab, 
   localizeContent, 
-  fetchAllowedUrls 
+  fetchAllowedUrls, 
+  getUrlParams,
+  getSpotifyVideoId,
+  fetchBookmarks
 } from './utils'
+import { useEffect, useState } from 'react'
 
 function App() {
 
+  const [videoElementInfo, setVideoELement] = useState({
+    id: '',
+    class: '',
+    title: '',
+    urlTemplate: '',
+    rect: {
+        width: 0,
+        height: 0,
+        top: 0,
+        left: 0,
+    },
+    duration: 0,
+    bookmarks: [] as { 
+      id: string; 
+      time: number;
+      urlTemplate?: string;
+      title: string; 
+      bookMarkCaption: string
+    }[] | null | undefined
+  })
+
   
+
+  useEffect(() => {
+    localizeContent()
+    const currSesion = async () => {
+      try {
+        const currentTab = await getCurrentTab()
+        const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
+        if (currentTab.url && currentTab && currentTab.id !== undefined) {
+          let urlParams = getUrlParams(currentTab.url, allowedUrls)
+          if (urlParams === 'spotify') {
+            const spotifyVideoId = await getSpotifyVideoId({ ...currentTab, id: currentTab.id })
+            urlParams = spotifyVideoId ? spotifyVideoId : ''
+            console.log('POPUP - Spotify Video Id:', urlParams)
+            urlParams = urlParams.replace('https://open.spotify.com/', '')
+          } else {
+            urlParams = ''
+          }
+          const videoBookmarks = await fetchBookmarks(urlParams)
+          setVideoELement({
+            ...videoElementInfo,
+            id: urlParams,
+            bookmarks: videoBookmarks as {
+              id: string;
+              time: number;
+              urlTemplate?: string;
+              title: string;
+              bookMarkCaption: string;
+            }[]
+          })
+        }
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    }
+    currSesion()
+  }, [])
   
   return (
     <>
