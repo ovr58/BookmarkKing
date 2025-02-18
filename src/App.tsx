@@ -68,30 +68,31 @@ function App() {
     return videoElementInfo
   }, [videoElementInfo])
 
-  const curVideosWithBookmarks = async (id: string) => {
+  const curVideosWithBookmarks = useCallback(async (id: string) => {
     const videos = await fetchVideosWithBookmarks(id)
     console.log('POPUP - Videos:', videos)
     return videos
-  }
+  }, [])
 
   const [videos, setVideos] = useState<VideoElementInfo[]>([])
 
   const [prevVideoId, setPrevVideoId] = useState('')
   
-
   useEffect(() => {
-    localizeContent()
-    curVideosWithBookmarks(videoElementInfo.id).then(async (videos) => {
-      return currSesion().then((videoElementInfo) => {
-        return {videos, videoElementInfo}
-      })
-    }).then(({videos, videoElementInfo}) => {
-      setVideos(videos)
-      setVideoELement(videoElementInfo)
-    }).catch((error) => {
-      console.error('Error:', error)
-    })
-  }, [])
+    const fetchData = async () => {
+      try {
+        localizeContent()
+        const videoElementInfo = await currSesion()
+        const videos = await curVideosWithBookmarks(videoElementInfo.id)
+        setVideos(videos)
+        setVideoELement(videoElementInfo)
+      } catch (error) {
+        console.error('Error:', error)
+      }
+    }
+
+    fetchData()
+  }, [curVideosWithBookmarks, currSesion, videoElementInfo.id])
   
   return (
     <>
