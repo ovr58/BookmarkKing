@@ -10,11 +10,32 @@ import {
   fetchVideosWithBookmarks,
   VideoElementInfo
 } from './utils'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 function App() {
 
-  const currSesion = async () => {
+  const [videoElementInfo, setVideoELement] = useState({
+    id: '',
+    class: '',
+    title: '',
+    urlTemplate: '',
+    rect: {
+        width: 0,
+        height: 0,
+        top: 0,
+        left: 0,
+    },
+    duration: 0,
+    bookmarks: [] as { 
+      id: string; 
+      time: number;
+      urlTemplate?: string;
+      title: string; 
+      bookMarkCaption: string
+    }[]
+  })
+
+  const currSesion = useCallback(async () => {
     try {
       const currentTab = await getCurrentTab()
       const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
@@ -45,7 +66,7 @@ function App() {
       console.error('Error:', error)
     }
     return videoElementInfo
-  }
+  }, [videoElementInfo])
 
   const curVideosWithBookmarks = async (id: string) => {
     const videos = await fetchVideosWithBookmarks(id)
@@ -54,27 +75,6 @@ function App() {
   }
 
   const [videos, setVideos] = useState<VideoElementInfo[]>([])
-
-  const [videoElementInfo, setVideoELement] = useState({
-    id: '',
-    class: '',
-    title: '',
-    urlTemplate: '',
-    rect: {
-        width: 0,
-        height: 0,
-        top: 0,
-        left: 0,
-    },
-    duration: 0,
-    bookmarks: [] as { 
-      id: string; 
-      time: number;
-      urlTemplate?: string;
-      title: string; 
-      bookMarkCaption: string
-    }[]
-  })
 
   const [prevVideoId, setPrevVideoId] = useState('')
   
