@@ -8,7 +8,8 @@ import {
   getSpotifyVideoId,
   fetchBookmarks,
   fetchVideosWithBookmarks,
-  VideoElementInfo
+  VideoElementInfo,
+  openVideo
 } from './utils'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -34,6 +35,11 @@ function App() {
       bookMarkCaption: string
     }[]
   })
+
+  const [videos, setVideos] = useState<VideoElementInfo[][]>([])
+
+  const [prevVideoId, setPrevVideoId] = useState('')
+
 
   const currSesion = useCallback(async () => {
     try {
@@ -74,10 +80,6 @@ function App() {
     return videos
   }, [])
 
-  const [videos, setVideos] = useState<VideoElementInfo[]>([])
-
-  const [prevVideoId, setPrevVideoId] = useState('')
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -93,6 +95,13 @@ function App() {
 
     fetchData()
   }, [curVideosWithBookmarks, currSesion, videoElementInfo.id])
+
+  const handleVideoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const video = JSON.parse(e.target.value)
+    openVideo(video)
+  }
   
   return (
     <>
@@ -102,26 +111,46 @@ function App() {
       <div id="container" className="container">
           <div>
             {
-              videoElementInfo.bookmarks.length > 0 && 
+              videos.length > 0 && 
               <div id="videos" className="videoslist">
                 <span className="title" data-i18n="videosSelectTitle"></span>
-                <select id="dropdown" className="videosSelect" i18n-title="videosSelectTitle">
-                  {videoElementInfo.bookmarks.map((bookmark, index) => {
+                <select
+                 id="dropdown" 
+                 className="videosSelect" 
+                 i18n-title="videosSelectTitle"
+                 onChange={(e) => handleVideoChange(e)}
+                >
+                  {videos.map((video) => {
                     return (
                       <option 
-                        key={index} value={bookmark.id}>{bookmark.title}</option>
+                        key={`'video-' + ${video[0].id}`}
+                        id={`'video-' + ${video[0].id}`}
+                        className = 'videoTitle'
+                        value={JSON.stringify(video[0])}
+                        selected={video[0].id === videoElementInfo.id}
+                      >
+                        {video[0].title}
+                      </option>
                     )
                   })}
+                  {!videoElementInfo.id && 
+                  <option 
+                    key='placeholder'
+                    value="" 
+                    className="videoTitle" 
+                    selected
+                    disabled
+                  >
+                    {chrome.i18n.getMessage('openVideoMessage')}
+                  </option>
+                  }
                 </select>
-              </div>}
-              <div id="setUpListContainer" className="setUpButtonContainer">
-                  
               </div>
-              <div id="sliderContainer" className="sliderContainer">
-
-              </div>
-              <div id="listTitle" className="title"></div>
-              <div className="bookmarks" id="bookmarks"></div>
+            }
+            <div id="listTitle" className="title">
+              {listTitle}
+            </div>
+            <div className="bookmarks" id="bookmarks"></div>
           </div>
       </div>
     </>

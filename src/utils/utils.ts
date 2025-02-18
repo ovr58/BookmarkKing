@@ -66,16 +66,16 @@ export function fetchBookmarks(id: string) {
 })
 }
 
-export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]> {
+export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[][]> {
     return new Promise((resolve) => {
         chrome.storage.sync.get(null, (obj: { [key: string]: string }) => {
             console.log('POPUP - Fetch Videos:', obj, id);
-            let videos: VideoElementInfo[] = [];
+            let videos: VideoElementInfo[][] = [];
             Object.keys(obj).forEach(key => {
                 const video: VideoElementInfo[] = JSON.parse(obj[key]);
                 console.log('POPUP - Video:', key, video);
                 if (key === id && video.length === 0) {
-                    const curVideos: VideoElementInfo[] = [{
+                    const curVideos: VideoElementInfo[][] = [[{
                         id: key,
                         class: '',
                         title: chrome.i18n.getMessage('currentVideo'),
@@ -86,7 +86,7 @@ export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]
                             left: 0
                         },
                         duration: 0
-                    }];
+                    }]];
                     videos = curVideos;
                 } else if (key !== id && video.length === 0) {
                     chrome.storage.sync.remove(key);
