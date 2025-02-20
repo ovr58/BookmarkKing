@@ -13,11 +13,11 @@ import {
   openVideo,
   ActiveTab
 } from './utils'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 function App() {
 
-  const [videoElementInfo, setVideoELement] = useState({
+  const videoElementInfo = useMemo(() => ({
     id: '',
     class: '',
     title: '',
@@ -37,83 +37,107 @@ function App() {
       bookMarkCaption: string
     }[]
   })
+  , [])
+
+  const curVideosWithBookmarks = useRef([] as VideoElementInfo[][]) as React.MutableRefObject<VideoElementInfo[][]>
+
+  const curSession = useRef(videoElementInfo) as React.MutableRefObject<VideoElementInfo>
+
+  const curTab = useRef({ url: '', id: 0 }) as React.MutableRefObject<ActiveTab>
 
   const [listTitle, setListTitle] = useState('')
 
-  const [videos, setVideos] = useState<VideoElementInfo[][]>([])
+  // const [videos, setVideos] = useState<VideoElementInfo[][]>([])
 
-  const currTab = useCallback(async () => {
-    try {
-      const currentTab = await getCurrentTab()
-      return currentTab as ActiveTab
-    } catch (error) {
-      console.error('Error:', error)
-      return { url: '', id: 0 } as ActiveTab
-    }
+  // const [currentSessionTab, setCurrSessionTab] = useState<ActiveTab>({ url: '', id: 0 })
+
+  
+  const currentTab = useMemo(async () => {
+    
   }, [])
 
-  const currSesion = useCallback(async (currentTab: ActiveTab) => {
-    try {
-      const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
-      if (currentTab.url && currentTab && currentTab.id !== undefined) {
-        let urlParams = getUrlParams(currentTab.url, allowedUrls)
-        if (urlParams === 'spotify') {
-          const spotifyVideoId = await getSpotifyVideoId({ ...currentTab, id: currentTab.id })
-          urlParams = spotifyVideoId ? spotifyVideoId : ''
-          console.log('POPUP - Spotify Video Id:', urlParams)
-          urlParams = urlParams.replace('https://open.spotify.com/', '')
-        } else {
-          urlParams = ''
-        }
-        const videoBookmarks = await fetchBookmarks(urlParams)
-        return  {
-          ...videoElementInfo,
-          id: urlParams,
-          bookmarks: videoBookmarks as {
-            id: string;
-            time: number;
-            urlTemplate?: string;
-            title: string;
-            bookMarkCaption: string;
-          }[]
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    }
-    return videoElementInfo
-  }, [videoElementInfo])
-
-  const curVideosWithBookmarks = useCallback(async (id: string) => {
-    const videos = await fetchVideosWithBookmarks(id)
-    console.log('POPUP - Videos:', videos)
-    return videos
-  }, [])
-
+  
   useEffect(() => {
+    const fetchCurTab = async () => {
+      try {
+        const tab = await getCurrentTab()
+        curTab.current = { id: tab.id ?? 0, url: tab.url ?? '' }
+        return curTab.current
+      } catch (error) {
+        console.error('Error:', error)
+        return { url: '', id: 0 }
+      }
+    }
+    const fetchCurSession = async () => {
+      console.log('CUR SESSION CALL')
+      const tab = await fetchCurTab()
+      try {
+        const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
+        if (tab.url && tab && tab.id !== undefined) {
+          let urlParams = getUrlParams(tab.url, allowedUrls)
+          if (urlParams === 'spotify') {
+            const spotifyVideoId = await getSpotifyVideoId({ ...tab, id: tab.id })
+            urlParams = spotifyVideoId ? spotifyVideoId : ''
+            console.log('POPUP - Spotify Video Id:', urlParams)
+            urlParams = urlParams.replace('https://open.spotify.com/', '')
+          } else {
+            urlParams = ''
+          }
+          const videoBookmarks = await fetchBookmarks(urlParams)
+          return  {
+            ...videoElementInfo,
+            id: urlParams,
+            bookmarks: videoBookmarks as {
+              id: string;
+              time: number;
+              urlTemplate?: string;
+              title: string;
+              bookMarkCaption: string;
+            }[]
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error)
+      }
+      return videoElementInfo
+    }
+    const fetchVideos = async () => {
+      console.log('CURR VIDEOS WITH BOOKMARKS CALL')
+      curSession.current = await fetchCurSession()
+      const id = curSession.current.id
+      const videos = await fetchVideosWithBookmarks(id)
+      console.log('POPUP - Videos:', videos)
+      curVideosWithBookmarks.current = videos
+    }
+    fetchVideos()
+  }, [currentTab, videoElementInfo])
+  
+  useEffect(() => {
+    console.log('POPUP - Fetch Data')
     const fetchData = async () => {
       try {
         localizeContent()
-        const currentTab = await currTab()
-        if (currentTab.url === '') {
+        const tab = await currentTab;
+        if (tab.url === '') {
           return
         }
-        const videoElementInfo = await currSesion(currentTab)
-        const videos = await curVideosWithBookmarks(videoElementInfo.id)
-        if (currentTab.url.includes('youtube.com/watch') || /vk(video\.ru|\.com)\/video/.test(currentTab.url) || currentTab.url.includes('dzen.ru') || currentTab.url.includes('open.spotify.com')) {
+        // const curVideoElement = await currSession
+        // const videos = await curVideosWithBookmarks
+        if (tab.url.includes('youtube.com/watch') || /vk(video\.ru|\.com)\/video/.test(tab.url) || tab.url.includes('dzen.ru') || tab.url.includes('open.spotify.com')) {
           setListTitle(chrome.i18n.getMessage('extentionTitle'))
         } else {
-          setListTitle(chrome.i18n.getMessage('extentionTitle'))
+          setListTitle(chrome.i18n.getMessage('extensionDescription'))
         }
-        setVideos(videos)
-        setVideoELement(videoElementInfo)
+        // setVideoELement(curVideoElement)
+        // setVideos(videos)
+        // setCurrSessionTab(tab)
       } catch (error) {
         console.error('Error:', error)
       }
     }
 
     fetchData()
-  }, [currTab, curVideosWithBookmarks, currSesion, videoElementInfo.id])
+  }, [currentTab])
 
   const handleVideoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
@@ -130,7 +154,7 @@ function App() {
       <div id="container" className="container">
           <div>
             {
-              videos.length > 0 && 
+              curVideosWithBookmarks.current.length > 0 && 
               <div id="videos" className="videoslist">
                 <span className="title" data-i18n="videosSelectTitle"></span>
                 <select
@@ -139,7 +163,7 @@ function App() {
                  i18n-title="videosSelectTitle"
                  onChange={(e) => handleVideoChange(e)}
                 >
-                  {videos.map((video) => {
+                  {curVideosWithBookmarks.current.map((video) => {
                     return (
                       <option 
                         key={`'video-' + ${video[0].id}`}
@@ -152,7 +176,7 @@ function App() {
                       </option>
                     )
                   })}
-                  {!videoElementInfo.id && 
+                  {videoElementInfo.id === '' && 
                   <option 
                     key='placeholder'
                     value="" 
@@ -160,7 +184,15 @@ function App() {
                     selected
                     disabled
                   >
-                    {chrome.i18n.getMessage('openVideoMessage')}
+                    {
+                      (() => {
+                        try {
+                          return chrome.i18n.getMessage('openVideoMessage')
+                        } catch (error) {
+                          return 'Open Video'
+                        }
+                      })()
+                    }
                   </option>
                   }
                 </select>
@@ -176,15 +208,23 @@ function App() {
                     <div 
                       key={`'bookmark-'-${i}-${bookmark.time}`}
                       id={`'bookmark-'-${i}-${bookmark.time}`}
-                      className="bookmark"
+                      className="w-full h-auto py-3"
                     >
-                      <Bookmark bookmark={bookmark} />
+                      {<Bookmark bookmark={bookmark} currTab={currentTab} />}
                     </div>
                   )
                 }) :
                 <div className="bookmark">
                   <div className="bookmarkTitle">
-                    {chrome.i18n.getMessage('noBookmarks')}
+                    {
+                      (() => {
+                        try {
+                          return chrome.i18n.getMessage('noBookmarks')
+                        } catch (error) {
+                          return 'No Bookmarks'
+                        }
+                      })()
+                    }
                   </div>
                 </div>
               }

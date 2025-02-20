@@ -3,10 +3,9 @@ let updateListener = false
 let activateListener = false
 let onMessageListener = false
 let portListerActive = false
-let contentListenerFlag = false
 
 const fetchAllowedUrls = () => {
-    return new Promise((resolve, _reject) => {
+    return new Promise((resolve) => {
         chrome.storage.sync.get(['allowedUrls'], (obj) => {
             resolve(obj.allowedUrls ? JSON.parse(obj.allowedUrls) : [])
         })
@@ -14,25 +13,27 @@ const fetchAllowedUrls = () => {
 }
 
 const getUrlParams = async (url) => {
-    let urlParams = null
+    let urlParams = '';
     let allowedUrls = await fetchAllowedUrls()
     console.log('From background - allowedUrls:', allowedUrls, url);
     if (url.includes('www.youtube.com/watch')) {
         const queryParam = url.split('?')[1];
-        urlParams = new URLSearchParams(queryParam).get('v');
+        urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (/vk(video\.ru|\.com)\/video/.test(url)) {
         urlParams = url.split('/video-')[1];
-    } else if (url.includes('dzen')) {
+    } else if (url.includes('dzen.ru')) {
         urlParams = url.split('watch/')[1];
     } else if (url.includes('music.youtube')) {
         const queryParam = url.split('?')[1];
-        urlParams = new URLSearchParams(queryParam).get('v');
+        urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
     } else if (allowedUrls && allowedUrls.includes(url)) {
-        urlParams = url
+        urlParams = url;
+    } else if (url.includes('//extensions') || url.includes('chrome://') || url.includes('edge://') || url.includes('opera://') || url.includes('brave://') || url.includes('vivaldi://') || url.includes('yandex://')) {
+        urlParams = 'technical';
     }
-    return urlParams
+    return urlParams;
 }
 
 
@@ -59,7 +60,7 @@ const getUrlParams = async (url) => {
 
             const urlParams = await getUrlParams(tab.url)
             console.log("From background on updated - urlParams:", urlParams);
-            urlParams && await chrome.tabs.sendMessage(tabId, {
+            urlParams !== '' && chrome.tabs.sendMessage(tabId, {
                 type: 'NEW',
                 videoId: urlParams
             }, (response) => {
@@ -87,12 +88,12 @@ const getUrlParams = async (url) => {
             const tab = await chrome.tabs.get(activeInfo.tabId);
             const urlParams = await getUrlParams(tab.url)
             console.log("From background - urlParams:", urlParams);
-            if (urlParams) {
-                chrome.tabs.onUpdated.addListener((tabId, changeInfo, updatedTab) =>{
+        if (urlParams !== '') {
+                chrome.tabs.onUpdated.addListener((_tabId, changeInfo) =>{
                     if (changeInfo.status === 'complete') {
                         const handleUpdate = async () => {
                             console.log("From background - sending message on activated:");
-                            await chrome.tabs.sendMessage(activeInfo.tabId, {
+                            chrome.tabs.sendMessage(activeInfo.tabId, {
                                 type: 'NEW',
                                 videoId: urlParams
                             }, (response) => {
@@ -111,7 +112,7 @@ const getUrlParams = async (url) => {
                         handleUpdate().catch(console.error);
                     }
                 });
-                await chrome.tabs.sendMessage(activeInfo.tabId, {
+                chrome.tabs.sendMessage(activeInfo.tabId, {
                     type: 'NEW',
                     videoId: urlParams
                 }, (response) => {
@@ -129,7 +130,7 @@ const getUrlParams = async (url) => {
     }
 });
 
-!onMessageListener && chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+!onMessageListener && chrome.runtime.onMessage.addListener((request, sender) => {
     onMessageListener = true
     if (request.type === "CREATING_BOOKMARK") {
         if (popupPort) {

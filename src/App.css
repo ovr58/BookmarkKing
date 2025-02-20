@@ -28,10 +28,6 @@
   border-color: #66afe9;
 }
 
-.bookmarks {
-  margin: 5px 5px;
-  padding: 3px;
-}
 
 .bookmark {
   display: flex;
