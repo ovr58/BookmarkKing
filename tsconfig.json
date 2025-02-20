@@ -9,8 +9,13 @@
     }
   ],
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "es2021"]
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "./build",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   }
 }
 

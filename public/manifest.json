@@ -10,37 +10,31 @@
     "https://music.youtube.com/*",
     "https://*.vkvideo.ru/*",
     "https://*.vk.com/*",
-    "https://*.dzen.ru/*",
-    "<all_urls>"
+    "https://*.dzen.ru/*"
   ],
   "background": {
-    "service_worker": "background.ts"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["content/content.ts"]
+      "js": ["content/content.js"]
     },
     {
       "matches": ["https://*.vkvideo.ru/*", "https://*.vk.com/*"],
-      "js": ["content/vkcontent.ts"]
+      "js": ["content/vkcontent.js"]
     },
     {
       "matches": ["https://*.dzen.ru/*"],
-      "js": ["content/dzencontent.ts"]
+      "js": ["content/dzencontent.js"]
     },
     {
       "matches": ["https://music.youtube.com/*"],
-      "js": ["content/ytmusicontent.ts"]
+      "js": ["content/ytmusicontent.js"]
     },
     {
       "matches": ["https://open.spotify.com/*"],
-      "js": ["content/spotifycontent.ts"]
-    },
-    {
-        "matches": ["<all_urls>"],
-        "exclude_matches": ["https://open.spotify.com/*", "https://music.youtube.com/*", "https://*.dzen.ru/*", "https://www.youtube.com/*", "https://*.vkvideo.ru/*", "https://*.vk.com/*"],
-        "js": ["content/cmncontent.ts"]
+      "js": ["content/spotifycontent.js"]
     }
   ],
   "web_accessible_resources": [

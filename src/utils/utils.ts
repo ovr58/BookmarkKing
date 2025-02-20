@@ -1,5 +1,6 @@
-interface ActiveTab {
+export interface ActiveTab {
     id: number;
+    url: string;
 }
 
 interface ScriptResult {
@@ -32,7 +33,7 @@ interface PopUpEvent extends Event {
 
 export async function getCurrentTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
-    return tabs[0]
+    return tabs[0] ? tabs[0] : { id: 0, url: '' }
 }
 
 export function localizeContent() {

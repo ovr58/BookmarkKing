@@ -11,6 +11,7 @@ import {
     onPlay,
     onDelete,
     type VideoElementInfo,
+    type ActiveTab,
 } from "./utils";
 
 export { 
@@ -26,6 +27,7 @@ export {
     onPlay,
     onDelete,
     VideoElementInfo,
+    ActiveTab,
 }
 
 

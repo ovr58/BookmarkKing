@@ -1,4 +1,5 @@
 import './App.css'
+import Bookmark from './components/Bookmark';
 
 import { 
   getCurrentTab, 
@@ -9,7 +10,8 @@ import {
   fetchBookmarks,
   fetchVideosWithBookmarks,
   VideoElementInfo,
-  openVideo
+  openVideo,
+  ActiveTab
 } from './utils'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -36,14 +38,22 @@ function App() {
     }[]
   })
 
+  const [listTitle, setListTitle] = useState('')
+
   const [videos, setVideos] = useState<VideoElementInfo[][]>([])
 
-  const [prevVideoId, setPrevVideoId] = useState('')
-
-
-  const currSesion = useCallback(async () => {
+  const currTab = useCallback(async () => {
     try {
       const currentTab = await getCurrentTab()
+      return currentTab as ActiveTab
+    } catch (error) {
+      console.error('Error:', error)
+      return { url: '', id: 0 } as ActiveTab
+    }
+  }, [])
+
+  const currSesion = useCallback(async (currentTab: ActiveTab) => {
+    try {
       const allowedUrls: string[] | '' = await fetchAllowedUrls() as string[] | ''
       if (currentTab.url && currentTab && currentTab.id !== undefined) {
         let urlParams = getUrlParams(currentTab.url, allowedUrls)
@@ -84,8 +94,17 @@ function App() {
     const fetchData = async () => {
       try {
         localizeContent()
-        const videoElementInfo = await currSesion()
+        const currentTab = await currTab()
+        if (currentTab.url === '') {
+          return
+        }
+        const videoElementInfo = await currSesion(currentTab)
         const videos = await curVideosWithBookmarks(videoElementInfo.id)
+        if (currentTab.url.includes('youtube.com/watch') || /vk(video\.ru|\.com)\/video/.test(currentTab.url) || currentTab.url.includes('dzen.ru') || currentTab.url.includes('open.spotify.com')) {
+          setListTitle(chrome.i18n.getMessage('extentionTitle'))
+        } else {
+          setListTitle(chrome.i18n.getMessage('extentionTitle'))
+        }
         setVideos(videos)
         setVideoELement(videoElementInfo)
       } catch (error) {
@@ -94,7 +113,7 @@ function App() {
     }
 
     fetchData()
-  }, [curVideosWithBookmarks, currSesion, videoElementInfo.id])
+  }, [currTab, curVideosWithBookmarks, currSesion, videoElementInfo.id])
 
   const handleVideoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
@@ -150,7 +169,26 @@ function App() {
             <div id="listTitle" className="title">
               {listTitle}
             </div>
-            <div className="bookmarks" id="bookmarks"></div>
+            <div className="bookmarks" id="bookmarks">
+              {videoElementInfo.bookmarks.length > 0 ? 
+                videoElementInfo.bookmarks.map((bookmark, i) => {
+                  return (
+                    <div 
+                      key={`'bookmark-'-${i}-${bookmark.time}`}
+                      id={`'bookmark-'-${i}-${bookmark.time}`}
+                      className="bookmark"
+                    >
+                      <Bookmark bookmark={bookmark} />
+                    </div>
+                  )
+                }) :
+                <div className="bookmark">
+                  <div className="bookmarkTitle">
+                    {chrome.i18n.getMessage('noBookmarks')}
+                  </div>
+                </div>
+              }
+            </div>
           </div>
       </div>
     </>
