@@ -36,22 +36,6 @@ const getUrlParams = async (url) => {
     return urlParams;
 }
 
-
-
-!portListerActive && chrome.runtime.onConnect.addListener((port) => {
-    if (port.name === "popup") {
-        popupPort = port;
-        console.log("Popup opened");
-
-        port.onDisconnect.addListener(() => {
-            console.log("Popup closed");
-            popupPort = null;
-        });
-
-    }
-    portListerActive = true
-});
-
 !updateListener &&  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     updateListener = true
     console.log("From background - Tab updated:", tabId, changeInfo, tab);

@@ -1,7 +1,7 @@
 import { 
     getCurrentTab, 
     localizeContent, 
-    fetchAllowedUrls,
+    getAllowedUrls,
     fetchBookmarks,
     fetchVideosWithBookmarks, 
     getUrlParams,
@@ -10,6 +10,7 @@ import {
     openVideo,
     onPlay,
     onDelete,
+    type Bookmark as BookmarkType,
     type VideoElementInfo,
     type ActiveTab,
 } from "./utils";
@@ -17,7 +18,7 @@ import {
 export { 
     getCurrentTab, 
     localizeContent, 
-    fetchAllowedUrls, 
+    getAllowedUrls, 
     getUrlParams,
     fetchBookmarks,
     fetchVideosWithBookmarks,
@@ -26,6 +27,7 @@ export {
     openVideo,
     onPlay,
     onDelete,
+    BookmarkType,
     VideoElementInfo,
     ActiveTab,
 }

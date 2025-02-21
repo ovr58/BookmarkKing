@@ -8,6 +8,14 @@ interface ScriptResult {
     result: string | null;
 }
 
+export interface Bookmark {
+    id: string;
+    time: number;
+    urlTemplate?: string;
+    title: string;
+    bookMarkCaption: string;
+}
+
 export interface VideoElementInfo {
     id: string;
     class: string;
@@ -20,6 +28,7 @@ export interface VideoElementInfo {
         left: number;
     };
     duration: number;
+    bookmarks: Bookmark[];
 }
 
 interface ScriptResultWithVideoElement {
@@ -51,12 +60,17 @@ export function localizeContent() {
     })
 }
 
-export function fetchAllowedUrls() {
-    return new Promise((resolve) => {
-        chrome.storage.sync.get(['allowedUrls'], (obj) => {
-            resolve(obj.allowedUrls)
+export function getAllowedUrls() {
+    const manifest = chrome.runtime.getManifest();
+    const matchesList: string[] = []
+    manifest.content_scripts?.forEach(contentScript => {
+        contentScript.matches?.forEach(match => {
+            matchesList.push(match)
         })
     })
+    const regexString = matchesList.join('|').replace(/\./g, '\\.').replace(/\*/g, '.*')
+    const regex = new RegExp(`^(${regexString})$`)
+    return regex
 }
 
 export function fetchBookmarks(id: string) {
@@ -86,7 +100,8 @@ export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]
                             top: 0,
                             left: 0
                         },
-                        duration: 0
+                        duration: 0,
+                        bookmarks: []
                     }]];
                     videos = curVideos;
                 } else if (key !== id && video.length === 0) {
@@ -106,7 +121,8 @@ export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]
                         top: 0,
                         left: 0
                     },
-                    duration: 0
+                    duration: 0,
+                    bookmarks: []
                 }];
                 videos.push(curVideo);
             }
@@ -115,7 +131,7 @@ export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[]
     });
 }
 
-export function getUrlParams(url: string, allowedUrls: string[] | ''): string {
+export function getUrlParams(url: string, allowedUrls: RegExp): string {
     let urlParams: string = '';
     if (url.includes('www.youtube.com/watch')) {
         const queryParam = url.split('?')[1];
@@ -129,7 +145,7 @@ export function getUrlParams(url: string, allowedUrls: string[] | ''): string {
         urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
-    } else if (allowedUrls && allowedUrls.includes(url)) {
+    } else if (allowedUrls && allowedUrls.test(url)) {
         urlParams = url;
     } else if (url.includes('//extensions') || url.includes('chrome://') || url.includes('edge://') || url.includes('opera://') || url.includes('brave://') || url.includes('vivaldi://') || url.includes('yandex://')) {
         urlParams = 'technical';
@@ -174,7 +190,21 @@ export async function checkIfTabHasVideoElement(activeTab: ActiveTab): Promise<V
                         top: rect.top,
                         left: rect.left,
                     },
-                    duration: video.duration
+                    duration: video.duration,
+                    bookmarks: [
+                        {
+                            id: '0',
+                            time: 0,
+                            title: 'Start',
+                            bookMarkCaption: 'Start of the video'
+                        },
+                        {
+                            id: '1',
+                            time: video.duration,
+                            title: 'End',
+                            bookMarkCaption: 'End of the video'
+                        }
+                    ]
                 };
             });
         }
