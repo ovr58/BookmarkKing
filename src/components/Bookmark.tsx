@@ -21,7 +21,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab }) => {
         <div className="max-w-2xl mx-auto bg-indigo-600 shadow-lg rounded-lg">
             <div className="px-2 py-2">
                 <div className="flex items-start">
-                    <img className="w-6 h-6 rounded-lg mr-2" src={faviconUrl} alt="bookmark-icon" />
+                    <img className="w-6 h-6 rounded-lg mr-3" src={faviconUrl} alt="bookmark-icon" />
                     <div className="flex-grow truncate">
                         <div className="w-full sm:flex justify-between items-center mb-3">
                             <h2 className="text-lg leading-snug font-extrabold text-gray-50 truncate mb-1 sm:mb-0">{bookmark.title}</h2>
@@ -30,8 +30,12 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab }) => {
                             <div className="max-w-md text-indigo-100">
                                 <p className="mb-2">{bookmark.bookMarkCaption}</p>
                             </div>
-                            <img className="flex items-center justify-center w-[24px] h-[24px] rounded-full border-2 from-red-400 to-red-600 hover:from-white hover:to-indigo-50 focus:outline-none focus-visible:from-white focus-visible:to-white transition duration-150 ml-2" src={playImg} alt="play-icon" aria-label="play from bookmark" />
-                            <img className="flex items-center justify-center w-[24px] h-[24px] rounded-full bg-gradient-to-b from-indigo-50 to-indigo-100 hover:from-white hover:to-indigo-50 focus:outline-none focus-visible:from-white focus-visible:to-white transition duration-150 ml-2" src={deleteImg} alt="play-icon" aria-label="delete bookmark" />
+                            <div className="bg-primary p-2 uppercase leading-normal shadow-primary-3 transition duration-150 ease-in-out hover:bg-primary-accent-300 hover:shadow-primary-2 focus:bg-primary-accent-300 focus:shadow-primary-2 focus:outline-none focus:ring-0 active:bg-primary-600 active:shadow-primary-2 motion-reduce:transition-none dark:shadow-black/30 dark:hover:shadow-dark-strong dark:focus:shadow-dark-strong dark:active:shadow-dark-strong rounded-full place-items-center flex flex-auto w-[24px] h-[24px]" aria-label="delete bookmark">
+                                <img className="w-[24px] h-[24px] rounded-full ml-2" src={playImg} alt="play-icon" aria-label="play from bookmark" />
+                            </div>
+                            <div className="bg-primary p-2 uppercase leading-normal shadow-primary-3 transition duration-150 ease-in-out hover:bg-primary-accent-300 hover:shadow-primary-2 focus:bg-primary-accent-300 focus:shadow-primary-2 focus:outline-none focus:ring-0 active:bg-primary-600 active:shadow-primary-2 motion-reduce:transition-none dark:shadow-black/30 dark:hover:shadow-dark-strong dark:focus:shadow-dark-strong dark:active:shadow-dark-strong rounded-full place-items-center flex flex-auto w-[24px] h-[24px]"  aria-label="delete bookmark">
+                                <img className="w-[24px] h-[24px] rounded-full ml-2" src={deleteImg} alt="play-icon" aria-label="play from bookmark" />
+                            </div>
                         </div>
                     </div>
                 </div>

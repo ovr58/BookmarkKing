@@ -5,8 +5,9 @@
 }
 
 .container {
-  width: 280px;
+  width: 380px;
   color: #314d3e;
+  padding: 6px 10px;
 }
 
 .title {
