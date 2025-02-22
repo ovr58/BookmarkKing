@@ -441,7 +441,7 @@ const contentFunc = () => {
             urlTemplate: 'https://open.spotify.com/',
             time: currentTime,
             title: currAudioTitle,
-            bookMarkCaption: `${newBookmark.title} - ${newBookmark.time}`
+            bookMarkCaption: `${currAudioTitle} - ${currentTime}`
         }
 
         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
