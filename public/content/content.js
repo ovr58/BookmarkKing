@@ -214,14 +214,13 @@ const contentFunc = () => {
         chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
         const currVideoTitle = document.title.split(' - YouTube')[0].replace(/^\(\d+\)\s*/, '').trim()
         const newBookmark = {
-            videoId: currentVideoId,
+            id: currentVideoId,
             urlTemplate: 'https://www.youtube.com/watch?v=',
             time: currentTime,
             title: currVideoTitle + ' - ' + getTime(currentTime),
+            bookMarkCaption: newBookmark.title
         }
-
-        newBookmark.bookMarkCaption = newBookmark.title
-
+        
         chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded('bookmarkClickEventHandler')
             console.log('Bookmark added from content.js:', newBookmark)

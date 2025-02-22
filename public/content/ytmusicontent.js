@@ -391,13 +391,12 @@ const contentFunc = () => {
         const songTitle = document.getElementsByClassName('title style-scope ytmusic-player-bar')[0] || document.querySelectorAll('yt-formatted-string.byline.style-scope.ytmusic-player-controls')[0]
         const currVideoTitle = `${groupAndAlbumTitle.textContent} - ${songTitle.textContent}`
         const newBookmark = {
-            videoId: currentVideoId,
+            id: currentVideoId,
             urlTemplate: 'https://music.youtube.com/watch?v=',
             time: currentTime,
             title: currVideoTitle + ' - ' + getTime(currentTime),
+            bookMarkCaption: newBookmark.title
         }
-
-        newBookmark.bookMarkCaption = newBookmark.title
 
         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded()

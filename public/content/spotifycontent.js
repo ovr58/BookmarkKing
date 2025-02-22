@@ -56,30 +56,6 @@ const contentFunc = () => {
         const contentItemTitle = document.querySelectorAll('a[data-testid="context-item-link"]')[0]
         const contentTitle = document.querySelectorAll('a[data-testid="context-item-info-show"]')[0]
         const contentArtist = document.querySelectorAll('a[data-testid="context-item-info-artist"]')[0]
-
-        // const nowPlayingWidget = document.querySelectorAll('div[data-testid="now-playing-widget"]')[0]
-
-        // if (contentTitle && nowPlayingWidget && !nowPlayingWidget.hasAttribute('data-observer-added')) {
-        //     new MutationObserver(async (mutations, observer) => {
-        //         const contentItemTitle = document.querySelectorAll('a[data-testid="context-item-link"]')[0]
-        //         const contentTitle = document.querySelectorAll('a[data-testid="context-item-info-show"]')[0]
-        //         const contentArtist = document.querySelectorAll('a[data-testid="context-item-info-artist"]')[0]
-        //         const newFullTitle = `${contentItemTitle ? contentItemTitle.textContent : 'Spotify'}${contentTitle ? ` - ${contentTitle.textContent}` : ''}${contentArtist ? ` - ${contentArtist.textContent}` : ''}`
-        //         if (newFullTitle !== spotifyPlayer.fullTitle) {
-        //             chrome.runtime.sendMessage({ 
-        //                 type: "NEW",
-        //                 videoId: 'spotify'
-        //             }, (response) => {
-        //                 if (chrome.runtime.lastError) {
-        //                     console.error("Error sending message:", chrome.runtime.lastError);
-        //                 } else {
-        //                     console.log("Message sent successfully:", response);
-        //                 }
-        //             });
-        //         }
-        //     }).observe(nowPlayingWidget, { childList: true, subtree: true, attributes: true, characterData: true });
-        //     nowPlayingWidget.setAttribute('data-observer-added', 'true');
-        // }
         return `${contentItemTitle ? contentItemTitle.textContent : 'Spotify'}${contentTitle ? ` - ${contentTitle.textContent}` : ''}${contentArtist ? ` - ${contentArtist.textContent}` : ''}`
     }
 
@@ -118,18 +94,6 @@ const contentFunc = () => {
         } else {
             console.error('Range input not found inside progressBar');
         }
-        // const clickEvent = new MouseEvent('click', {
-        //     bubbles: true,
-        //     cancelable: true,
-        //     view: window,
-        //     clientX: progressBar.getBoundingClientRect().left + clickPosition,
-        //     clientY: progressBar.getBoundingClientRect().top + (progressBar.offsetHeight / 2)
-        // });
-        
-    
-        // progressBar.dispatchEvent(clickEvent);
-
-        // console.log('Event dispatched:', clickEvent)
 
         await new Promise(resolve => setTimeout(resolve, 100))
 
@@ -473,13 +437,12 @@ const contentFunc = () => {
         
         const currAudioTitle = spotifyPlayer.title
         const newBookmark = {
-            videoId: currentVideoId,
+            id: currentVideoId,
             urlTemplate: 'https://open.spotify.com/',
             time: currentTime,
             title: currAudioTitle,
+            bookMarkCaption: `${newBookmark.title} - ${newBookmark.time}`
         }
-
-        newBookmark.bookMarkCaption = `${newBookmark.title} - ${newBookmark.time}`
 
         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded()
