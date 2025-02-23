@@ -12,6 +12,17 @@ const fetchAllowedUrls = () => {
     })
 }
 
+!portListerActive && chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === 'popup') {
+    popupPort = port;
+
+    port.onDisconnect.addListener(() => {
+      popupPort = null;
+    });
+  }
+  portListerActive = true
+});
+
 const getUrlParams = async (url) => {
     let urlParams = '';
     let allowedUrls = await fetchAllowedUrls()

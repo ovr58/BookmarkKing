@@ -12,9 +12,21 @@ import {
   openVideo,
   getAllowedUrls,
   BookmarkType,
-  ActiveTab
 } from './utils'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+
+
+const port = chrome.runtime.connect({ name: 'popup' })
+
+const portListener = () => {
+  console.log('POPUP - PORT MESSAGE')
+  App()
+  port.disconnect()
+}
+
+if (!port.onMessage.hasListener(portListener)) {
+  port.onMessage.addListener(portListener)
+}
 
 function App() {
 
@@ -41,6 +53,7 @@ function App() {
   const [curTab, setCurTab] = useState({ url: '', id: 0 })
 
   const fetchCurTab = useCallback(async () => {
+    console.log('CUR TAB CALL')
     try {
       const tab = await getCurrentTab()
       return { id: tab.id ?? 0, url: tab.url ?? '' }
@@ -50,10 +63,10 @@ function App() {
     }
   }, [])
 
-  useEffect(() => {
-    const fetchCurSession = async (tab: ActiveTab): Promise<VideoElementInfo> => {
-      console.log('CUR SESSION CALL')
-      try {
+  const fetchCurSession = useCallback(async (): Promise<VideoElementInfo> => {
+    console.log('CUR SESSION CALL')
+    const tab = await fetchCurTab()
+    try {
       const allowedUrls: RegExp = getAllowedUrls() as RegExp
       console.log('POPUP - ALLOWED URLS:', allowedUrls)
       if (tab.url && tab && tab.id !== undefined) {
@@ -74,28 +87,31 @@ function App() {
         bookmarks: videoBookmarks as BookmarkType[]
         }
       }
-      } catch (error) {
+    } catch (error) {
       console.error('Error:', error)
-      }
-      return videoElementInfo
     }
-    const fetchVideos = async () => {
-      console.log('CURR VIDEOS WITH BOOKMARKS CALL')
-      const tab = await fetchCurTab()
-      curSession.current = await fetchCurSession(tab)
-      const id = curSession.current.id
-      const videos = await fetchVideosWithBookmarks(id)
-      curVideosWithBookmarks.current = videos
-      console.log('POPUP - Videos:', curVideosWithBookmarks.current)
-      return tab
-    }
+    return videoElementInfo
+  }, [videoElementInfo, fetchCurTab])
+
+  const fetchVideos = useCallback(async () => {
+    console.log('CURR VIDEOS WITH BOOKMARKS CALL')
+    const tab = await fetchCurTab()
+    curSession.current = await fetchCurSession()
+    const id = curSession.current.id
+    const videos = await fetchVideosWithBookmarks(id)
+    curVideosWithBookmarks.current = videos
+    console.log('POPUP - Videos:', curVideosWithBookmarks.current)
+    return tab
+  }, [fetchCurTab, fetchCurSession])
+
+  useEffect(() => {
     fetchVideos().then((tab) => {
       if (tab.id !== curTab.id) {
         setCurTab(tab)
       }
     })
     localizeContent()
-  }, [fetchCurTab, videoElementInfo, curTab.id])
+  }, [fetchVideos, curTab.id])
 
   const handleVideoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
