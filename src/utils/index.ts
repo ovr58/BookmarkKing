@@ -10,7 +10,6 @@ import {
     openVideo,
     onPlay,
     onDelete,
-    type Bookmark as BookmarkType,
     type VideoElementInfo,
     type ActiveTab,
 } from "./utils";
@@ -27,7 +26,6 @@ export {
     openVideo,
     onPlay,
     onDelete,
-    BookmarkType,
     VideoElementInfo,
     ActiveTab,
 }

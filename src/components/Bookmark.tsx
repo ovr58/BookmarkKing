@@ -1,14 +1,8 @@
 import React from 'react';
-import { ActiveTab } from '../utils';
+import { ActiveTab, VideoElementInfo } from '../utils';
 
 interface BookmarkProps {
-    bookmark: {
-        id: string;
-        urlTemplate?: string;
-        time: number;
-        title: string;
-        bookMarkCaption?: string;
-    },
+    bookmark: VideoElementInfo,
     curTab: ActiveTab;
 }
 

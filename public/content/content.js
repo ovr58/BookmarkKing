@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 
 const getTime = (time) => {
     let date = new Date(null)
@@ -140,7 +141,7 @@ const contentFunc = () => {
     }
 
     const checkIfExists = (bookmarks, newBookmarkTime) => {
-        return new Promise((resolve, _reject) => {
+        return new Promise((resolve) => {
             for (element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
                 if (newBookmarkTime <= element.time + 10 && newBookmarkTime >= element.time - 10) {
@@ -208,7 +209,7 @@ const contentFunc = () => {
         const exists = await checkIfExists(currentVideoBookmarks, currentTime)
         if (exists) return
 
-        await chrome.storage.sync.set({ taskStatus: true }, () => {
+        await chrome.storage.local.set({ taskStatus: true }, () => {
             console.log('Task status set to started');
         });
         chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
@@ -225,7 +226,7 @@ const contentFunc = () => {
             await newVideoLoaded('bookmarkClickEventHandler')
             console.log('Bookmark added from content.js:', newBookmark)
         })
-        await chrome.storage.sync.set({ taskStatus: false }, () => {
+        await chrome.storage.local.set({ taskStatus: false }, () => {
             console.log('Task status set to completed');
         });
         chrome.runtime.sendMessage({ type: "STOP_CREATING_BOOKMARK"})
@@ -279,7 +280,7 @@ const contentFunc = () => {
         }
 
         if (!isProgressBarObserverAdded) {
-            const progressBarMutationObserver = new MutationObserver((mutationList, observer) => {
+            const progressBarMutationObserver = new MutationObserver((mutationList) => {
                 const handleFunc = async () => {
                     console.log('PBM !!!!!!! :', mutationList)
                     await newVideoLoaded('PROGRESS BAR MUTATION')
@@ -297,7 +298,7 @@ const contentFunc = () => {
         }
     }
 
-    const contentOnMeassageListener = (obj, _sender, _sendResponse) => {
+    const contentOnMeassageListener = (obj) => {
         const { type, value, videoId } = obj
         currentVideoId = videoId
         const handleFetchBookmarks = async () => {
@@ -316,7 +317,7 @@ const contentFunc = () => {
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
                     const handleNewVideoLoaded = async () => {
-                        await chrome.storage.sync.set({ taskStatus: false }, async () => {
+                        await chrome.storage.local.set({ taskStatus: false }, async () => {
                             await newVideoLoaded('NEW')
                             console.log('Task status set to false');
                         });

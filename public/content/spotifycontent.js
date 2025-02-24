@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+
 const getTime = (time) => {
     let date = new Date(null)
     date.setSeconds(time)
@@ -62,7 +64,7 @@ const contentFunc = () => {
     const getDuration = () => {
         const audioPlayerDuration = document.querySelectorAll(audioPlayerDurationElement)[0]
         if (audioPlayerDuration && !audioPlayerDuration.hasAttribute('data-observer-added')) {
-            new MutationObserver(async (mutations, observer) => {
+            new MutationObserver(async () => {
                 const audioPlayerDuration = document.querySelectorAll('div[data-testid="playback-duration"]')[0]
                 const newDuration = audioPlayerDuration ? audioPlayerDuration.textContent : 0
                 if (newDuration !== spotifyPlayer.duration) {
@@ -75,8 +77,6 @@ const contentFunc = () => {
     }
 
     const setPlaybackPosition = async (positionPercentage, progressBar) => {
-        const progressBarWidth = progressBar.offsetWidth;
-        const clickPosition = progressBarWidth * positionPercentage;
         const rangeInput = progressBar.querySelector('input[type="range"]');
         if (rangeInput) {
             // Установите новое значение для input
@@ -101,7 +101,7 @@ const contentFunc = () => {
     }
 
     const addContainer = (parentElement, containerToAddId) => {
-        return new Promise((resolve, _reject) => {
+        return new Promise((resolve) => {
             if (!parentElement) {
                 resolve()
                 return
@@ -236,7 +236,7 @@ const contentFunc = () => {
             bookmarkElement.style.height = '16px'
             bookmarkElement.style.zIndex = '9999'
             bookmarkElement.title = `${bookmark.title} - ${bookmark.time}`
-            bookmarkElement.addEventListener('click', (event) => {
+            bookmarkElement.addEventListener('click', () => {
                 spotifyPlayer.currentTime = bookmark.time
                 console.log('Play bookmark:', spotifyPlayer, bookmark.time)
                 spotifyPlayer.play(bookmark.time)
@@ -271,7 +271,7 @@ const contentFunc = () => {
 
         if (!isContentChangeObserverAdded) {
             const config = { childList: true, subtree: true, attributes: true, characterData: true };
-            const callback = (mutationsList, observer) => {
+            const callback = (mutationsList) => {
                 console.log('Content change observer:', mutationsList)
                 const podcastElementText = document.querySelector('a[data-testid="context-item-link"]').textContent;
                 if (podcastElementText !== podcastElementPreviousText) {
@@ -305,7 +305,7 @@ const contentFunc = () => {
     }
 
     const checkIfExists = (bookmarks, newBookmarkTime, buttonClass) => {
-        return new Promise((resolve, _reject) => {
+        return new Promise((resolve) => {
             for (element of bookmarks) {
                 const time = getSeconds(element.time)
                 const newTime = getSeconds(newBookmarkTime)
@@ -430,7 +430,7 @@ const contentFunc = () => {
         const exists = await checkIfExists(currentVideoBookmarks, currentTime, buttonClass)
         if (exists) return
 
-        await chrome.storage.sync.set({ taskStatus: true }, () => {
+        await chrome.storage.local.set({ taskStatus: true }, () => {
             console.log('Task status set to started');
         });
         chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
@@ -448,14 +448,14 @@ const contentFunc = () => {
             await newVideoLoaded()
             console.log('Bookmark added from dzencontent.js:', newBookmark)
         })
-        await chrome.storage.sync.set({ taskStatus: false }, () => {
+        await chrome.storage.local.set({ taskStatus: false }, () => {
             console.log('Task status set to completed');
         });
         chrome.runtime.sendMessage({ type: "STOP_CREATING_BOOKMARK"})
     }
 
 
-    const spotifyOnMessageListener = (obj, _sender, sendResponse) => {
+    const spotifyOnMessageListener = (obj) => {
         const { type, value, videoId } = obj
         currentVideoId = videoId
         if (currentVideoId === 'spotify') {
@@ -499,7 +499,7 @@ const contentFunc = () => {
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
                     const handleNewVideoLoaded = async () => {
-                        await chrome.storage.sync.set({ taskStatus: false }, async () => {
+                        await chrome.storage.local.set({ taskStatus: false }, async () => {
                             await newVideoLoaded('NEW')
                             console.log('Task status set to false');
                         });

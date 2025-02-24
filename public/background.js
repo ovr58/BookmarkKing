@@ -1,8 +1,10 @@
+/* eslint-disable no-undef */
+
 let popupPort = null;
 let updateListener = false
 let activateListener = false
 let onMessageListener = false
-let portListerActive = false
+// let portListerActive = false
 
 const fetchAllowedUrls = () => {
     return new Promise((resolve) => {
@@ -12,16 +14,16 @@ const fetchAllowedUrls = () => {
     })
 }
 
-!portListerActive && chrome.runtime.onConnect.addListener((port) => {
-  if (port.name === 'popup') {
-    popupPort = port;
+// !portListerActive && chrome.runtime.onConnect.addListener((port) => {
+//   if (port.name === 'popup') {
+//     popupPort = port;
 
-    port.onDisconnect.addListener(() => {
-      popupPort = null;
-    });
-  }
-  portListerActive = true
-});
+//     port.onDisconnect.addListener(() => {
+//       popupPort = null;
+//     });
+//   }
+//   portListerActive = true
+// });
 
 const getUrlParams = async (url) => {
     let urlParams = '';

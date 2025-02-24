@@ -6,56 +6,27 @@ import {
   localizeContent, 
   getUrlParams,
   getSpotifyVideoId,
-  fetchBookmarks,
   fetchVideosWithBookmarks,
   VideoElementInfo,
   openVideo,
   getAllowedUrls,
-  BookmarkType,
+  ActiveTab,
 } from './utils'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-
-const port = chrome.runtime.connect({ name: 'popup' })
-
-const portListener = () => {
-  console.log('POPUP - PORT MESSAGE')
-  App()
-  port.disconnect()
-}
-
-if (!port.onMessage.hasListener(portListener)) {
-  port.onMessage.addListener(portListener)
-}
 
 function App() {
 
-  const videoElementInfo = useMemo(() => ({
-    id: '',
-    class: '',
-    title: '',
-    urlTemplate: '',
-    rect: {
-        width: 0,
-        height: 0,
-        top: 0,
-        left: 0,
-    },
-    duration: 0,
-    bookmarks: [] as BookmarkType[]
-  })
-  , [])
+  const [curVideosWithBookmarks, setcurVideosWithBookmarks] = useState<{ [key: string]: VideoElementInfo[] | [] }>({ ['unavailable']: [] })
 
-  const curVideosWithBookmarks = useRef([] as VideoElementInfo[][]) as React.MutableRefObject<VideoElementInfo[][]>
-
-  const curSession = useRef(videoElementInfo) as React.MutableRefObject<VideoElementInfo>
+  const [curSession, setcurSession] = useState('')
 
   const [curTab, setCurTab] = useState({ url: '', id: 0 })
 
   const fetchCurTab = useCallback(async () => {
-    console.log('CUR TAB CALL')
     try {
       const tab = await getCurrentTab()
+      console.log('CUR TAB CALL', tab)
       return { id: tab.id ?? 0, url: tab.url ?? '' }
     } catch (error) {
       console.error('Error:', error)
@@ -63,55 +34,91 @@ function App() {
     }
   }, [])
 
-  const fetchCurSession = useCallback(async (): Promise<VideoElementInfo> => {
-    console.log('CUR SESSION CALL')
-    const tab = await fetchCurTab()
+  const fetchCurSession = useCallback(async (tab: ActiveTab): Promise<string> => {
+    console.log('CUR SESSION CALL', tab)
+    const allowedUrls: RegExp = getAllowedUrls() as RegExp
+    console.log('POPUP - ALLOWED URLS:', allowedUrls)
+    let urlParams = getUrlParams(tab.url, allowedUrls)
     try {
-      const allowedUrls: RegExp = getAllowedUrls() as RegExp
-      console.log('POPUP - ALLOWED URLS:', allowedUrls)
-      if (tab.url && tab && tab.id !== undefined) {
-        let urlParams = getUrlParams(tab.url, allowedUrls)
-        if (urlParams === 'spotify') {
+      if (urlParams === 'spotify') {
         const spotifyVideoId = await getSpotifyVideoId({ ...tab, id: tab.id })
         urlParams = spotifyVideoId ? spotifyVideoId : ''
         console.log('POPUP - Spotify Video Id:', urlParams)
         urlParams = urlParams.replace('https://open.spotify.com/', '')
-        } else {
-        urlParams = ''
-        }
-        const videoBookmarks = await fetchBookmarks(urlParams)
-        console.log('POPUP - BOOKMARKS:', videoBookmarks)
-        return  {
-        ...videoElementInfo,
-        id: urlParams,
-        bookmarks: videoBookmarks as BookmarkType[]
-        }
       }
+      console.log('POPUP - BOOKMARKS:', urlParams)
     } catch (error) {
       console.error('Error:', error)
     }
-    return videoElementInfo
-  }, [videoElementInfo, fetchCurTab])
+    return urlParams
+  }, [])
 
   const fetchVideos = useCallback(async () => {
     console.log('CURR VIDEOS WITH BOOKMARKS CALL')
-    const tab = await fetchCurTab()
-    curSession.current = await fetchCurSession()
-    const id = curSession.current.id
-    const videos = await fetchVideosWithBookmarks(id)
-    curVideosWithBookmarks.current = videos
-    console.log('POPUP - Videos:', curVideosWithBookmarks.current)
-    return tab
-  }, [fetchCurTab, fetchCurSession])
+    const videos = await fetchVideosWithBookmarks()
+    return videos
+  }, [])
 
   useEffect(() => {
-    fetchVideos().then((tab) => {
-      if (tab.id !== curTab.id) {
+    const port = chrome.runtime.connect({ name: 'popup' })
+
+    const portListener = () => {
+      console.log('POPUP - PORT MESSAGE')
+      fetchCurTab().then((tab) => {
+        console.log('TAB', tab)
         setCurTab(tab)
-      }
+        fetchCurSession(tab).then((session) => {
+          console.log('SESSION', session)
+          setcurSession(session)
+          fetchVideos().then((videos) => {
+            const typedVideos = videos as { [key: string]: VideoElementInfo[] | [] };
+            if (Object.keys(typedVideos).length === 0 || !Object.keys(typedVideos).includes(session)) {
+              typedVideos[session] = []
+            }
+            if (typedVideos[session] && typedVideos[session].length === 0) {
+              typedVideos[session] = []
+            }
+
+            console.log('VIDEOS', typedVideos)
+
+            setcurVideosWithBookmarks(typedVideos)
+            localizeContent()
+          })
+        })
+      })
+    }
+
+    port.onMessage.addListener(portListener)
+
+    return () => {
+      port.onMessage.removeListener(portListener)
+    }
+  })
+
+  useEffect(() => {
+    fetchCurTab().then((tab) => {
+      console.log('TAB', tab)
+      setCurTab(tab)
+      fetchCurSession(tab).then((session) => {
+        console.log('SESSION', session)
+        setcurSession(session)
+        fetchVideos().then((videos) => {
+          const typedVideos = videos as { [key: string]: VideoElementInfo[] | [] };
+          if (Object.keys(typedVideos).length === 0 || !Object.keys(typedVideos).includes(session)) {
+            typedVideos[session] = []
+          }
+          if (typedVideos[session] && typedVideos[session].length === 0) {
+            typedVideos[session] = []
+          }
+
+          console.log('VIDEOS', typedVideos)
+
+          setcurVideosWithBookmarks(typedVideos)
+          localizeContent()
+        })
+      })
     })
-    localizeContent()
-  }, [fetchVideos, curTab.id])
+  }, [fetchVideos, fetchCurSession, fetchCurTab, curTab.id])
 
   const handleVideoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
@@ -127,8 +134,6 @@ function App() {
       </div>
       <div id="container" className="container">
           <div>
-            {
-              curVideosWithBookmarks.current.length > 0 && 
               <div id="videos" className="videoslist">
                 <span className="title" data-i18n="videosSelectTitle"></span>
                 <select
@@ -137,41 +142,40 @@ function App() {
                  i18n-title="videosSelectTitle"
                  onChange={(e) => handleVideoChange(e)}
                 >
-                  {curVideosWithBookmarks.current.map((video) => {
-                    return (
-                      <option 
-                        key={`'video-' + ${video[0].id}`}
-                        id={`'video-' + ${video[0].id}`}
-                        className = 'videoTitle'
-                        value={JSON.stringify(video[0])}
-                        selected={video[0].id === curSession.current.id}
-                      >
-                        {video[0].title}
-                      </option>
-                    )
-                  })}
-                  {curSession.current.id === '' && 
-                  <option 
-                    key='placeholder'
-                    value="" 
-                    className="videoTitle" 
-                    selected
-                    disabled
-                  >
-                    {
-                      (() => {
-                        try {
-                          return chrome.i18n.getMessage('openVideoMessage')
-                        } catch (error) {
-                          return 'Open Video'
-                        }
-                      })()
+                  {Object.keys(curVideosWithBookmarks).map((videoKey) => {
+                    console.log('VIDEO FROM LIST RENDER:', videoKey)
+                    if (videoKey === curSession && curVideosWithBookmarks[videoKey].length === 0) {
+                      return (
+                        <option 
+                          key='placeholder'
+                          id='placeholder'
+                          className = 'videoTitle'
+                          value=''
+                          selected={true}
+                        >
+                          {
+                            videoKey !== 'technical' && videoKey !== 'unavailable' ?
+                              chrome.i18n.getMessage('currentVideo') :
+                              chrome.i18n.getMessage('openVideoMessage')
+                          }
+                        </option>
+                      )
+                    } else if (curVideosWithBookmarks[videoKey].length > 0) {
+                      return (
+                        <option 
+                          key={`'video-' + ${curVideosWithBookmarks[videoKey][0].id}`}
+                          id={`'video-' + ${curVideosWithBookmarks[videoKey][0].id}`}
+                          className = 'videoTitle'
+                          value={JSON.stringify(curVideosWithBookmarks[videoKey][0])}
+                          selected={curVideosWithBookmarks[videoKey][0].id === curSession}
+                        >
+                          {curVideosWithBookmarks[videoKey][0].title}
+                        </option>
+                      )
                     }
-                  </option>
-                  }
+                  })}
                 </select>
               </div>
-            }
             <div id="listTitle" className="title">
               {getAllowedUrls().test(curTab.url) ?
                 `${chrome.i18n.getMessage('extentionTitle')}` :
@@ -180,8 +184,9 @@ function App() {
               }
             </div>
             <div className="bookmarks" id="bookmarks">
-              {curSession.current.bookmarks.length > 0 ? 
-                curSession.current.bookmarks.map((bookmark, i) => {
+              {curVideosWithBookmarks[curSession] && curVideosWithBookmarks[curSession].length > 0 ? 
+                curVideosWithBookmarks[curSession].map((bookmark, i) => {
+                  console.log('BOOKMARK:', bookmark)
                   return (
                     <div 
                       key={`'bookmark-'-${i}-${bookmark.time}`}

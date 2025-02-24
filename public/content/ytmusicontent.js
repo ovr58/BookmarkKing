@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 
 const getTime = (time) => {
     let date = new Date(null)
@@ -34,22 +35,8 @@ const contentFunc = () => {
     let bookmarkOnProgressBarTopBig = '-25px'
     let bookmarkOnProgressBarTopSmall = '-35px'
 
-    const addDurationChangeListener = (player) => {
-        if (!isDurationChangeListenerAdded) {
-            console.log('duration change listener will be added:', isDurationChangeListenerAdded)
-            player.addEventListener('durationchange', async () => {
-                if (durationOld === player.duration) {
-                    return
-                }
-                durationOld = player.duration
-                console.log('Duration changed:', durationOld, player.duration)
-                await newVideoLoaded()
-            })
-        }
-    }
-
     const addContainer = (parentElement, containerToAddId) => {
-        return new Promise((resolve, _reject) => {
+        return new Promise((resolve) => {
             if (!parentElement) {
                 resolve()
                 return
@@ -120,19 +107,6 @@ const contentFunc = () => {
         setTimeout(() => {
             messageDiv.remove();
         }, 3000);
-    }
-
-    const clearBookmarksOnProgressBar = () => {
-        const deleteOldBookmarks = document.getElementsByClassName('bookmark-on-progress')
-        if (deleteOldBookmarks.length === 0) {
-            return
-        }
-        console.log('Delete old bookmarks:', deleteOldBookmarks)
-            
-        for (let bookmark of deleteOldBookmarks) {
-            console.log('Delete bookmark:', bookmark)
-            bookmark.remove()
-        }
     }
 
     const addBookmarksOnProgressBar = async (bookmarks) => {
@@ -314,7 +288,7 @@ const contentFunc = () => {
     }
 
     const checkIfExists = (bookmarks, newBookmarkTime, buttonClass) => {
-        return new Promise((resolve, _reject) => {
+        return new Promise((resolve) => {
             for (element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
                 if (newBookmarkTime <= element.time + 10 && newBookmarkTime >= element.time - 10) {
@@ -383,7 +357,7 @@ const contentFunc = () => {
         const exists = await checkIfExists(currentVideoBookmarks, currentTime, buttonClass)
         if (exists) return
 
-        await chrome.storage.sync.set({ taskStatus: true }, () => {
+        await chrome.storage.local.set({ taskStatus: true }, () => {
             console.log('Task status set to started');
         });
         chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
@@ -402,13 +376,13 @@ const contentFunc = () => {
             await newVideoLoaded()
             console.log('Bookmark added from dzencontent.js:', newBookmark)
         })
-        await chrome.storage.sync.set({ taskStatus: false }, () => {
+        await chrome.storage.local.set({ taskStatus: false }, () => {
             console.log('Task status set to completed');
         });
         chrome.runtime.sendMessage({ type: "STOP_CREATING_BOOKMARK"})
     }
 
-    const ytmusicontentOnMessageListener = (obj, _sender, _sendResponse) => {
+    const ytmusicontentOnMessageListener = (obj) => {
         isMessageListenerAdded = true
         const { type, value, videoId } = obj
         currentVideoId = videoId
@@ -428,7 +402,7 @@ const contentFunc = () => {
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
                     const handleNewVideoLoaded = async () => {
-                        await chrome.storage.sync.set({ taskStatus: false }, async () => {
+                        await chrome.storage.local.set({ taskStatus: false }, async () => {
                             await newVideoLoaded('NEW')
                             console.log('Task status set to false');
                         });

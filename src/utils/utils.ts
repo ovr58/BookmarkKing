@@ -8,14 +8,6 @@ interface ScriptResult {
     result: string | null;
 }
 
-export interface Bookmark {
-    id: string;
-    time: number;
-    urlTemplate?: string;
-    title: string;
-    bookMarkCaption: string;
-}
-
 export interface VideoElementInfo {
     id: string;
     class: string;
@@ -28,7 +20,8 @@ export interface VideoElementInfo {
         left: number;
     };
     duration: number;
-    bookmarks: Bookmark[];
+    time: number;
+    bookMarkCaption: string;
 }
 
 interface ScriptResultWithVideoElement {
@@ -42,6 +35,7 @@ interface PopUpEvent extends Event {
 
 export async function getCurrentTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+    console.log('FROM UTILS - Current Tab:', tabs[0])
     return tabs[0] ? tabs[0] : { id: 0, url: '' }
 }
 
@@ -81,51 +75,15 @@ export function fetchBookmarks(id: string) {
 })
 }
 
-export function fetchVideosWithBookmarks(id: string): Promise<VideoElementInfo[][]> {
+export function fetchVideosWithBookmarks() {
     return new Promise((resolve) => {
         chrome.storage.sync.get(null, (obj: { [key: string]: string }) => {
-            console.log('POPUP - Fetch Videos:', obj, id);
-            let videos: VideoElementInfo[][] = [];
+            console.log('POPUP - Fetch Videos:', obj);
+            const videos: { [key: string]: VideoElementInfo[] } = {};
             Object.keys(obj).forEach(key => {
                 const video: VideoElementInfo[] = JSON.parse(obj[key]);
-                console.log('POPUP - Video:', key, video);
-                if (key === id && video.length === 0) {
-                    const curVideos: VideoElementInfo[][] = [[{
-                        id: key,
-                        class: '',
-                        title: chrome.i18n.getMessage('currentVideo'),
-                        rect: {
-                            width: 0,
-                            height: 0,
-                            top: 0,
-                            left: 0
-                        },
-                        duration: 0,
-                        bookmarks: []
-                    }]];
-                    videos = curVideos;
-                } else if (key !== id && video.length === 0) {
-                    chrome.storage.sync.remove(key);
-                } else if (video.length > 0 && key !== 'allowedUrls') {
-                    videos.push(video);
-                }
+                videos[key] = video;
             });
-            if (!Object.keys(obj).includes(id) && id) {
-                const curVideo: VideoElementInfo[] = [{
-                    id: id,
-                    class: '',
-                    title: chrome.i18n.getMessage('currentVideo'),
-                    rect: {
-                        width: 0,
-                        height: 0,
-                        top: 0,
-                        left: 0
-                    },
-                    duration: 0,
-                    bookmarks: []
-                }];
-                videos.push(curVideo);
-            }
             resolve(videos);
         });
     });
@@ -145,10 +103,12 @@ export function getUrlParams(url: string, allowedUrls: RegExp): string {
         urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
-    } else if (allowedUrls && allowedUrls.test(url)) {
+    } else if (allowedUrls && allowedUrls.test(url) && urlParams === '') {
         urlParams = url;
     } else if (url.includes('//extensions') || url.includes('chrome://') || url.includes('edge://') || url.includes('opera://') || url.includes('brave://') || url.includes('vivaldi://') || url.includes('yandex://')) {
         urlParams = 'technical';
+    } else {
+        urlParams = 'unavailable';
     }
     return urlParams;
 }
@@ -182,31 +142,20 @@ export async function checkIfTabHasVideoElement(activeTab: ActiveTab): Promise<V
             return Array.from(videos).map(video => {
                 const rect = video.getBoundingClientRect();
                 return {
-                    id: video.id,
-                    class: video.className,
-                    rect: {
-                        width: rect.width,
-                        height: rect.height,
-                        top: rect.top,
-                        left: rect.left,
-                    },
-                    duration: video.duration,
-                    bookmarks: [
-                        {
-                            id: '0',
-                            time: 0,
-                            title: 'Start',
-                            bookMarkCaption: 'Start of the video'
+                        id: video.id,
+                        class: video.className,
+                        rect: {
+                            width: rect.width,
+                            height: rect.height,
+                            top: rect.top,
+                            left: rect.left,
                         },
-                        {
-                            id: '1',
-                            time: video.duration,
-                            title: 'End',
-                            bookMarkCaption: 'End of the video'
-                        }
-                    ]
-                };
-            });
+                        duration: video.duration,
+                        time: 0,
+                        title: 'Start',
+                        bookMarkCaption: 'Start of the video'
+                    }
+                });
         }
     }) as ScriptResultWithVideoElement[];
     console.log('POPUP - Check If Tab Has Video Element:', results);
