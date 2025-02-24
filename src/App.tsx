@@ -12,10 +12,12 @@ import {
   getAllowedUrls,
   ActiveTab,
 } from './utils'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 
 function App() {
+
+  const allowedUrls = useMemo(() => getAllowedUrls(), [])
 
   const [curVideosWithBookmarks, setcurVideosWithBookmarks] = useState<{ [key: string]: VideoElementInfo[] | [] }>({ ['unavailable']: [] })
 
@@ -36,8 +38,8 @@ function App() {
 
   const fetchCurSession = useCallback(async (tab: ActiveTab): Promise<string> => {
     console.log('CUR SESSION CALL', tab)
-    const allowedUrls: RegExp = getAllowedUrls() as RegExp
-    console.log('POPUP - ALLOWED URLS:', allowedUrls)
+    console.log('POPUP - ALLOWED URLS:', allowedUrls, allowedUrls.some(element => tab.url.includes(element)))
+
     let urlParams = getUrlParams(tab.url, allowedUrls)
     try {
       if (urlParams === 'spotify') {
@@ -51,49 +53,13 @@ function App() {
       console.error('Error:', error)
     }
     return urlParams
-  }, [])
+  }, [allowedUrls])
 
   const fetchVideos = useCallback(async () => {
     console.log('CURR VIDEOS WITH BOOKMARKS CALL')
     const videos = await fetchVideosWithBookmarks()
     return videos
   }, [])
-
-  useEffect(() => {
-    const port = chrome.runtime.connect({ name: 'popup' })
-
-    const portListener = () => {
-      console.log('POPUP - PORT MESSAGE')
-      fetchCurTab().then((tab) => {
-        console.log('TAB', tab)
-        setCurTab(tab)
-        fetchCurSession(tab).then((session) => {
-          console.log('SESSION', session)
-          setcurSession(session)
-          fetchVideos().then((videos) => {
-            const typedVideos = videos as { [key: string]: VideoElementInfo[] | [] };
-            if (Object.keys(typedVideos).length === 0 || !Object.keys(typedVideos).includes(session)) {
-              typedVideos[session] = []
-            }
-            if (typedVideos[session] && typedVideos[session].length === 0) {
-              typedVideos[session] = []
-            }
-
-            console.log('VIDEOS', typedVideos)
-
-            setcurVideosWithBookmarks(typedVideos)
-            localizeContent()
-          })
-        })
-      })
-    }
-
-    port.onMessage.addListener(portListener)
-
-    return () => {
-      port.onMessage.removeListener(portListener)
-    }
-  })
 
   useEffect(() => {
     fetchCurTab().then((tab) => {
@@ -177,7 +143,7 @@ function App() {
                 </select>
               </div>
             <div id="listTitle" className="title">
-              {getAllowedUrls().test(curTab.url) ?
+              {allowedUrls.some(element => curTab.url.includes(element)) ?
                 `${chrome.i18n.getMessage('extentionTitle')}` :
                 
                 `${chrome.i18n.getMessage('extensionDescription')}`

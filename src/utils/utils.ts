@@ -59,12 +59,11 @@ export function getAllowedUrls() {
     const matchesList: string[] = []
     manifest.content_scripts?.forEach(contentScript => {
         contentScript.matches?.forEach(match => {
-            matchesList.push(match)
+            matchesList.push(match.replace(/\*/g, '').replace('https://', '').replace('http://', ''))
         })
     })
-    const regexString = matchesList.join('|').replace(/\./g, '\\.').replace(/\*/g, '.*')
-    const regex = new RegExp(`^(${regexString})$`)
-    return regex
+    
+    return matchesList
 }
 
 export function fetchBookmarks(id: string) {
@@ -89,7 +88,7 @@ export function fetchVideosWithBookmarks() {
     });
 }
 
-export function getUrlParams(url: string, allowedUrls: RegExp): string {
+export function getUrlParams(url: string, allowedUrls: string[]): string {
     let urlParams: string = '';
     if (url.includes('www.youtube.com/watch')) {
         const queryParam = url.split('?')[1];
@@ -103,7 +102,7 @@ export function getUrlParams(url: string, allowedUrls: RegExp): string {
         urlParams = new URLSearchParams(queryParam).get('v') ?? '';
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
-    } else if (allowedUrls && allowedUrls.test(url) && urlParams === '') {
+        } else if (allowedUrls.length > 0 && allowedUrls.some((element: string) => url.includes(element)) && urlParams === '') {
         urlParams = url;
     } else if (url.includes('//extensions') || url.includes('chrome://') || url.includes('edge://') || url.includes('opera://') || url.includes('brave://') || url.includes('vivaldi://') || url.includes('yandex://')) {
         urlParams = 'technical';

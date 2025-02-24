@@ -15,7 +15,6 @@ const errorHandler = (error, nativeMessage = '') => {
         console.error(nativeMessage, error.message);
     } else {
         console.error('Unexpected error:', error.message);
-        popupMessage(chrome.i18n.getMessage("unexpectedError"), chrome.i18n.getMessage("reloadTab"), 'bookmark-btn');
     }
 }
 
