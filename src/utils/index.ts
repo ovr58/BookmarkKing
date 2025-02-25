@@ -10,6 +10,7 @@ import {
     openVideo,
     onPlay,
     onDelete,
+    getTimestamp,
     type VideoElementInfo,
     type ActiveTab,
 } from "./utils";
@@ -26,6 +27,7 @@ export {
     openVideo,
     onPlay,
     onDelete,
+    getTimestamp,
     VideoElementInfo,
     ActiveTab,
 }

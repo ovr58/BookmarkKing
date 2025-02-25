@@ -299,7 +299,7 @@ const contentFunc = () => {
             id: currentVideoId,
             urlTemplate: 'https://vk.com/video-',
             time: currentTime,
-            title: currVideoTitle + ' - ' + getTime(currentTime),
+            title: currVideoTitle,
             bookMarkCaption: currVideoTitle
         }
 

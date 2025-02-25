@@ -218,7 +218,7 @@ const contentFunc = () => {
             id: currentVideoId,
             urlTemplate: 'https://www.youtube.com/watch?v=',
             time: currentTime,
-            title: currVideoTitle + ' - ' + getTime(currentTime),
+            title: currVideoTitle,
             bookMarkCaption: currVideoTitle
         }
         

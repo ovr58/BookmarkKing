@@ -229,7 +229,7 @@ const contentFunc = () => {
             bookmarkElement.style.cursor = 'pointer'
             bookmarkElement.style.position = 'absolute'
             console.log('BOOKMARK TIME:', bookmark.time)
-            bookmarkElement.style.left = `${((getSeconds(bookmark.time) / getSeconds(progressBarValue)) * progressBarWidthBig)-8}px`
+            bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidthBig)-8}px`
             bookmarkElement.style.top = bookmarkOnProgressBarTopBig
             bookmarkElement.style.width = '16px'
             bookmarkElement.style.height = '16px'
@@ -306,8 +306,8 @@ const contentFunc = () => {
     const checkIfExists = (bookmarks, newBookmarkTime, buttonClass) => {
         return new Promise((resolve) => {
             for (element of bookmarks) {
-                const time = getSeconds(element.time)
-                const newTime = getSeconds(newBookmarkTime)
+                const time = element.time
+                const newTime = newBookmarkTime
                 console.log('FROM IS EXISTS: ', element.time, time, newBookmarkTime)
                 if (newTime <= time + 10 && newTime >= time - 10) {
                     const msgLine1 = chrome.i18n.getMessage('cantAddBookmarkLine1')
@@ -355,7 +355,7 @@ const contentFunc = () => {
             durationElement: getDuration(),
             fullTitle: getFullTitle(),
             get duration() {
-                return this.durationElement ? this.durationElement.textContent : 0
+                return this.durationElement ? getSeconds(this.durationElement.textContent) : 0
             },
             set duration(value) {
                 _duration = value
@@ -373,7 +373,7 @@ const contentFunc = () => {
                 _playState = value
             },
             get currentTime() {
-                return this.audioPLayerCurrentTime ? this.audioPLayerCurrentTime.textContent : 0
+                return this.audioPLayerCurrentTime ? getSeconds(this.audioPLayerCurrentTime.textContent) : 0
             },
             set currentTime(value) {
                 _currentTime = value
@@ -382,7 +382,7 @@ const contentFunc = () => {
             },
             updatePlaybackPosition: async function(position) {
                 console.log('Update playback position:', position, this.duration)
-                let positionPercentage = getSeconds(position) / getSeconds(this.duration) * 100
+                let positionPercentage = position / this.duration * 100
                 await setPlaybackPosition(positionPercentage, this.progressBar)
             },
             play: async function(value) {

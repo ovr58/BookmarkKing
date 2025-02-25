@@ -33,6 +33,13 @@ interface PopUpEvent extends Event {
     target: HTMLButtonElement & EventTarget;
 }
 
+export function getTimestamp(time: number): string {
+    const date = new Date(null)
+    date.setSeconds(time)
+    
+    return date.toISOString().substring(11, 8)
+}
+
 export async function getCurrentTab() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
     console.log('FROM UTILS - Current Tab:', tabs[0])

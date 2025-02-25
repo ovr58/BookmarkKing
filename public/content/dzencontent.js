@@ -298,7 +298,7 @@ const contentFunc = () => {
             id: currentVideoId,
             urlTemplate: 'https://dzen.ru/video/watch/',
             time: currentTime,
-            title: currVideoTitle + ' - ' + getTime(currentTime),
+            title: currVideoTitle,
             bookMarkCaption: currVideoTitle
         }
         

@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import './App.css'
 import Bookmark from './components/Bookmark';
 
@@ -24,6 +25,10 @@ function App() {
   const [curSession, setcurSession] = useState('')
 
   const [curTab, setCurTab] = useState({ url: '', id: 0 })
+
+  const [isOpen, setIsOpen] = useState<{ [key: string]: number }>({})
+
+  console.log('POPUP - ALLOWED URLS:', isOpen)
 
   const fetchCurTab = useCallback(async () => {
     try {
@@ -154,13 +159,15 @@ function App() {
                 curVideosWithBookmarks[curSession].map((bookmark, i) => {
                   console.log('BOOKMARK:', bookmark)
                   return (
-                    <div 
+                    <motion.div 
                       key={`'bookmark-'-${i}-${bookmark.time}`}
                       id={`'bookmark-'-${i}-${bookmark.time}`}
                       className="w-full h-auto py-3"
                     >
-                      {<Bookmark bookmark={bookmark} curTab={curTab} />}
-                    </div>
+                      <AnimatePresence>
+                        {<Bookmark bookmark={bookmark} curTab={curTab} isOpen={isOpen} setIsOpen={setIsOpen} />}
+                      </AnimatePresence>
+                    </motion.div>
                   )
                 }) :
                 <div className="bookmark">
