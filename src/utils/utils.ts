@@ -34,10 +34,10 @@ interface PopUpEvent extends Event {
 }
 
 export function getTimestamp(time: number): string {
-    const date = new Date(null)
+    const date = new Date(0)
     date.setSeconds(time)
     
-    return date.toISOString().substring(11, 8)
+    return date.toISOString().substring(11, 19)
 }
 
 export async function getCurrentTab() {
