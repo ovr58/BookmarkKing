@@ -21,8 +21,8 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen
     return (
         <motion.div 
             className="max-w-2xl mx-auto bg-indigo-600 shadow-lg rounded-lg overflow-hidden"
-            initial={{ opacity: 1, height: 'full' }}
-            animate={{ height: isOpen[bookmark.time.toString()] === bookmark.time ? 'full' : '36px' }}
+            initial={{ opacity: 1, height: '36px' }}
+            animate={{ height: isOpen[bookmark.time.toString()] && isOpen[bookmark.time.toString()] === bookmark.time ? '36px' : 'auto'}}
             exit={{ opacity: 1, height: '36px', margin: 0, padding: 0 }}
             transition={{ duration: 0.5 }}>
             <div className="px-2 py-2">
