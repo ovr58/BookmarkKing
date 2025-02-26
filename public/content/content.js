@@ -167,9 +167,11 @@ const contentFunc = () => {
         return new Promise((resolve) => {
             for (element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
-                if (newBookmarkTime <= element.time + 10 && newBookmarkTime >= element.time - 10) {
+                const upLimit = element.time + 10 > youtubePlayer.duration ? youtubePlayer.duration : element.time + 10
+                const lowLimit = element.time - 10 < 0 ? 0 : element.time - 10
+                if (newBookmarkTime <= upLimit && newBookmarkTime >= lowLimit) {
                     const msgLine1 = chrome.i18n.getMessage('cantAddBookmarkLine1')
-                    const msgLine2 = `${chrome.i18n.getMessage('cantAddBookmarkLine2')} ${getTime(element.time-10)} - ${getTime(element.time + 10)}`
+                    const msgLine2 = `${chrome.i18n.getMessage('cantAddBookmarkLine2')} ${getTime(lowLimit)} - ${getTime(upLimit)}`
                     popupMessage(msgLine1, msgLine2)
                     resolve(true)
                     return

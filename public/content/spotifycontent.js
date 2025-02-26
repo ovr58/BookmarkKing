@@ -309,9 +309,11 @@ const contentFunc = () => {
                 const time = element.time
                 const newTime = newBookmarkTime
                 console.log('FROM IS EXISTS: ', element.time, time, newBookmarkTime)
-                if (newTime <= time + 10 && newTime >= time - 10) {
+                const upLimit = time + 10 > spotifyPlayer.duration ? spotifyPlayer.duration : time + 10
+                const lowLimit = time - 10 < 0 ? 0 : time - 10
+                if (newTime <= upLimit && newTime >= lowLimit) {
                     const msgLine1 = chrome.i18n.getMessage('cantAddBookmarkLine1')
-                    const msgLine2 = `${chrome.i18n.getMessage('cantAddBookmarkLine2')} ${getTime(time-10)} - ${getTime(time + 10)}`
+                    const msgLine2 = `${chrome.i18n.getMessage('cantAddBookmarkLine2')} ${getTime(lowLimit)} - ${getTime(upLimit)}`
                     popupMessage(msgLine1, msgLine2, buttonClass)
                     resolve(true)
                     return
