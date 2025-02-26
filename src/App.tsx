@@ -12,6 +12,8 @@ import {
   openVideo,
   getAllowedUrls,
   ActiveTab,
+  onPlay,
+  onDelete,
 } from './utils'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -27,8 +29,6 @@ function App() {
   const [curTab, setCurTab] = useState({ url: '', id: 0 })
 
   const [isOpen, setIsOpen] = useState<{ [key: string]: number }>({})
-
-  console.log('POPUP - ALLOWED URLS:', isOpen)
 
   const fetchCurTab = useCallback(async () => {
     try {
@@ -97,6 +97,21 @@ function App() {
     const video = JSON.parse(e.target.value)
     openVideo(video)
   }
+
+  const handleBookmarkPLay = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await onPlay(curTab, bookmark.time, bookmark.id)
+  }
+
+  const handleBookmarkDelete = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('DELETE BOOKMARK:', bookmark)
+    onDelete(curTab, bookmark.time, bookmark.id).then(() => {
+      setIsOpen({ ...isOpen, [bookmark.time.toString()]: -1 })
+    })
+  }
   
   return (
     <>
@@ -162,10 +177,17 @@ function App() {
                     <motion.div 
                       key={`'bookmark-'-${i}-${bookmark.time}`}
                       id={`'bookmark-'-${i}-${bookmark.time}`}
-                      className="w-full h-auto py-3"
+                      className="w-full h-auto py-1"
                     >
                       <AnimatePresence>
-                        {<Bookmark bookmark={bookmark} curTab={curTab} isOpen={isOpen} setIsOpen={setIsOpen} />}
+                        {<Bookmark 
+                          bookmark={bookmark} 
+                          curTab={curTab} 
+                          isOpen={isOpen} 
+                          setIsOpen={setIsOpen}
+                          handleBookmarkPLay={handleBookmarkPLay}
+                          handleBookmarkDelete={handleBookmarkDelete}
+                        />}
                       </AnimatePresence>
                     </motion.div>
                   )

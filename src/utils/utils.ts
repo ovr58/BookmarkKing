@@ -29,10 +29,6 @@ interface ScriptResultWithVideoElement {
     result: VideoElementInfo[] | null;
 }
 
-interface PopUpEvent extends Event {
-    target: HTMLButtonElement & EventTarget;
-}
-
 export function getTimestamp(time: number): string {
     const date = new Date(0)
     date.setSeconds(time)
@@ -183,41 +179,28 @@ export async function openVideo({ id, urlTemplate }: VideoElementInfo): Promise<
     }
 }
 
-export async function onPlay(event: PopUpEvent, id: string): Promise<void> {
-    const bookmarkTime = (event.target.parentNode?.parentNode as HTMLElement)?.getAttribute("timestamp");
-    const activeTab = await getCurrentTab();
-
-    if (activeTab?.id !== undefined && bookmarkTime !== null) {
-        chrome.tabs.sendMessage(activeTab.id, {
+export async function onPlay(tab:ActiveTab ,time: number, id: string): Promise<void> {
+    if (tab.id !== undefined && time !== null) {
+        await chrome.tabs.sendMessage(tab.id, {
             type: "PLAY",
-            value: bookmarkTime,
+            value: time,
             videoId: id
         });
     }
+    return Promise.resolve();
 }
 
-export async function onDelete(event: PopUpEvent, id: string): Promise<void> {
+export async function onDelete(tab: ActiveTab, time:number, id: string): Promise<void> {
     console.log('Delete Bookmark')
-    const activeTab = await getCurrentTab();
     
-    const parentNode = event.target.parentNode;
-    const grandParentNode = parentNode?.parentNode as HTMLElement | null;
-    const bookmarkTime = grandParentNode?.getAttribute("timestamp");
-    const bookmarkElementToDelete = document.querySelector(`[timestamp="${bookmarkTime}"]`);
-    console.log('POPUP - BookMark Time to delete:', bookmarkElementToDelete)
-    if (bookmarkElementToDelete && bookmarkElementToDelete.parentNode) {
-        bookmarkElementToDelete.parentNode.removeChild(bookmarkElementToDelete);
-    }
-    
-    if (activeTab?.id !== undefined) {
-        chrome.tabs.sendMessage(activeTab.id, {
+    if (tab.id !== undefined) {
+        chrome.tabs.sendMessage(tab.id, {
             type: "DELETE",
-            value: bookmarkTime,
+            value: time,
             videoId: id
         }, () => {
             console.log('POPUP - Bookmark Deleted Callback Called')
-            const event = new Event('DOMContentLoaded');
-            document.dispatchEvent(event);
+            return Promise.resolve();
         });
     }
 }

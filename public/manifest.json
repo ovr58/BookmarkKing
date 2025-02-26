@@ -25,7 +25,7 @@
       "js": ["content/vkcontent.js"]
     },
     {
-      "matches": ["https://*.dzen.ru/*"],
+      "matches": ["https://*.dzen.ru/*", "https://dzen.ru/*"],
       "js": ["content/dzencontent.js"]
     },
     {

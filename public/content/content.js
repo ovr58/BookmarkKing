@@ -26,6 +26,38 @@ const contentFunc = () => {
     let previousProgressBarWidth = 0
     let newVideoLoadedCalled = 0
 
+    const addContainer = (parentElement, containerToAddId) => {
+        return new Promise((resolve) => {
+            if (!parentElement) {
+                resolve()
+                return
+            }
+            const observer = new MutationObserver((mutations, observer) => {
+                const containerToAdd = document.getElementById(containerToAddId);
+                if (containerToAdd) {
+                    observer.disconnect();
+                    resolve(containerToAdd);
+                }
+            })
+            observer.observe(parentElement, { childList: true, subtree: true })
+            let containerToAdd = document.getElementById(containerToAddId)
+            if (!containerToAdd) {
+                containerToAdd = document.createElement('div')
+                containerToAdd.id = containerToAddId
+                containerToAdd.style.position = 'relative'
+                containerToAdd.style.width = '100%'
+                containerToAdd.style.height = '100%'
+                containerToAdd.style.zIndex = '9999'
+                parentElement.appendChild(containerToAdd)
+                console.log('Bookmarks container created:', containerToAdd)
+            } else {
+                containerToAdd.innerHTML = ''
+                observer.disconnect();
+                resolve(containerToAdd);
+            }
+        })
+    }
+
     const popupMessage = (line1, line2) => {
         const bookMarkBtn = document.getElementsByClassName('bookmark-btn')[0];
         const messageDiv = document.createElement('div');
@@ -56,19 +88,6 @@ const contentFunc = () => {
         }, 3000);
     }
 
-    const clearBookmarksOnProgressBar = () => {
-        const deleteOldBookmarks = document.getElementsByClassName('bookmark-on-progress')
-        if (deleteOldBookmarks.length === 0) {
-            return
-        }
-        console.log('Delete old bookmarks:', deleteOldBookmarks)
-            
-        for (let bookmark of deleteOldBookmarks) {
-            console.log('Delete bookmark:', bookmark)
-            bookmark.remove()
-        }
-    }
-
     const addBookmarkButton = () => {
         const bookmarkButtonExists = document.getElementById('bookmark-btn')
         if (bookmarkButtonExists) {
@@ -84,7 +103,6 @@ const contentFunc = () => {
         bookMarkBtn.style.zIndex = '150'
         bookMarkBtn.style.opacity = '0.2'
         bookMarkBtn.style.transition = 'opacity 0.5s'
-        youtubePlayer = document.getElementsByClassName('video-stream')[0]
 
         if (youtubePlayer) {
             const scruberElement = document.getElementsByClassName('ytp-right-controls')[0]
@@ -102,17 +120,21 @@ const contentFunc = () => {
         }
     }
 
-    const addBookmarksOnProgressBar = (bookmarks) => {
+    const addBookmarksOnProgressBar = async (bookmarks) => {
         let progressBarElement = document.querySelectorAll('#ytd-player .ytp-chrome-bottom .ytp-progress-bar')[0] || document.getElementsByClassName('ytp-progress-bar')[0]
         console.log('Progress bar element:', progressBarElement)
-        let progressBarWidth = progressBarElement.offsetWidth
+        
+        const progressBarValue = youtubePlayer.duration
+        let bookmarksContainer = await addContainer(progressBarElement,'bookmarks-container')
+        let progressBarWidth = bookmarksContainer.offsetWidth
         if (progressBarWidth === 0) {
             progressBarElement = document.querySelectorAll('.ytp-progress-bar')[0]
+            bookmarksContainer = await addContainer(progressBarElement,'bookmarks-container')
             console.log('MINIPLAYER Progress bar element:', progressBarElement)
-            progressBarWidth = progressBarElement.offsetWidth
+            progressBarWidth = bookmarksContainer.offsetWidth
         }
-        const progressBarValue = progressBarElement.getAttribute('aria-valuemax')
         console.log('Progress bar width:', progressBarWidth, bookmarks)
+
         for (let bookmark of bookmarks) {
             const bookmarkElement = document.createElement('img')
             bookmarkElement.id = 'bookmark-' + bookmark.time
@@ -120,11 +142,13 @@ const contentFunc = () => {
             if (ifExist) {
                 ifExist.remove()
             }
-            bookmarkElement.className = 'ytp-scrubber-container ' + 'bookmark-on-progress'
+            bookmarkElement.className = 'bookmark-on-progress'
+            bookmarkElement.style.cursor = 'pointer'
+            bookmarkElement.style.position = 'absolute'
             bookmarkElement.src = chrome.runtime.getURL('assets/bookmark64x64.png')
             console.log('Bookmark left:', bookmark.time, progressBarValue, progressBarWidth, (bookmark.time / progressBarValue) * progressBarWidth)
             bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidth)-8}px`
-            bookmarkElement.style.top = '-4px'
+            bookmarkElement.style.top = '-8px'
             bookmarkElement.style.width = '16px'
             bookmarkElement.style.height = '16px'
             bookmarkElement.style.zIndex = '9999'
@@ -135,7 +159,7 @@ const contentFunc = () => {
                 youtubePlayer.currentTime = bookmark.time
                 youtubePlayer.play()
             })
-            progressBarElement.appendChild(bookmarkElement)
+            bookmarksContainer.appendChild(bookmarkElement)
         }
     }
 
@@ -179,12 +203,10 @@ const contentFunc = () => {
     const newVideoLoaded = async (fromMessage) => {
         newVideoLoadedCalled++
         const bookmarks = await fetchBookmarks(currentVideoId)
+        youtubePlayer = document.getElementsByClassName('video-stream')[0]
         console.log('Fetch called from newVideoLoaded', fromMessage, newVideoLoadedCalled)
         newVideoLoadedCalled === 1 && addBookmarkButton()
-        clearBookmarksOnProgressBar() 
-        if (bookmarks.length > 0) {
-            addBookmarksOnProgressBar(bookmarks)
-        }
+        addBookmarksOnProgressBar(bookmarks)
         addResizeObserver()
         newVideoLoadedCalled--
     }
@@ -301,6 +323,7 @@ const contentFunc = () => {
     const contentOnMeassageListener = (obj) => {
         const { type, value, videoId } = obj
         currentVideoId = videoId
+
         const handleFetchBookmarks = async () => {
             let currentVideoBookmarks = []
             try {
@@ -317,7 +340,7 @@ const contentFunc = () => {
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
                     const handleNewVideoLoaded = async () => {
-                        await chrome.storage.local.set({ taskStatus: false }, async () => {
+                        chrome.storage.local.set({ taskStatus: false }, async () => {
                             await newVideoLoaded('NEW')
                             console.log('Task status set to false');
                         });
@@ -329,14 +352,14 @@ const contentFunc = () => {
                 } else if (type === 'PLAY') {
                     youtubePlayer.currentTime = value
                 } else if (type === 'DELETE') {
+                    console.log('Delete bookmark:', value, currentVideoBookmarks)
+                    currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => bookmark.time != value)
                     const handleDeleteBookmark = async () => {
-                        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('DELETE')
                             console.log('Bookmark deleted:', value, currentVideoBookmarks)
                         })
                     }
-                    console.log('Delete bookmark:', value, currentVideoBookmarks)
-                    currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => bookmark.time != value)
                     handleDeleteBookmark().catch(error => {
                         const nativeMessage = 'Error deleting bookmark:'
                         errorHandler(error, nativeMessage)
@@ -350,7 +373,7 @@ const contentFunc = () => {
                         return bookmark
                     })
                     const handleUpdateBookmark = async () => {
-                        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('UPATE')
                             console.log('Bookmark updated:', value, currentVideoBookmarks)
                         })

@@ -12,9 +12,11 @@ interface BookmarkProps {
     curTab: ActiveTab;
     isOpen: { [key: string]: number };
     setIsOpen: React.Dispatch<React.SetStateAction<{ [key: string]: number; }>>;
+    handleBookmarkPLay: (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => void;
+    handleBookmarkDelete: (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => void;
 }
 
-const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen }) => {
+const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen, handleBookmarkPLay, handleBookmarkDelete }) => {
     const url = new URL(curTab.url || '')
     const faviconUrl = `${url.origin}/favicon.ico`
     
@@ -24,7 +26,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen
             initial={{ opacity: 1, height: '36px' }}
             animate={{ height: isOpen[bookmark.time.toString()] && isOpen[bookmark.time.toString()] === bookmark.time ? '36px' : 'auto'}}
             exit={{ opacity: 1, height: '36px', margin: 0, padding: 0 }}
-            transition={{ duration: 0.5 }}>
+            transition={{ duration: 0.3 }}>
             <div className="px-2 py-2">
                 <div className="flex items-start">
                     <img className="w-6 h-6 mr-2 pb-2" src={faviconUrl} alt="bookmark-icon" />
@@ -41,10 +43,16 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen
                             <div className="max-w-md text-indigo-100">
                                 <p className="mb-2">{bookmark.bookMarkCaption}</p>
                             </div>
-                            <div className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out" aria-label="play from bookmark">
+                            <div 
+                                className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out" aria-label="play from bookmark"
+                                onClick={(e) => handleBookmarkPLay(e, bookmark)}
+                            >
                                 <HiPlayPause className="w-[24px] h-auto object-fit rounded-full fill-white" aria-label="play from bookmark" />
                             </div>
-                            <div className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out"  aria-label="delete bookmark">
+                            <div 
+                                className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out"  aria-label="delete bookmark"
+                                onClick={(e) => handleBookmarkDelete(e, bookmark)}
+                            >
                                 <MdDeleteForever className="w-[24px] h-auto object-fit rounded-full fill-white" aria-label="delete from bookmarks" />
                             </div>
                         </div>
