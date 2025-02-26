@@ -9,15 +9,13 @@ import {
   onPlay,
   onDelete,
 } from './utils'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import useChromeApi from './context/useChromeApi';
 
 
 function App() {
 
   const { curTab, curSession, curVideosWithBookmarks, allowedUrls } = useChromeApi()
-
-  const [isOpen, setIsOpen] = useState<{ [key: string]: number }>({})
 
   useEffect(() => {
     localizeContent()
@@ -41,9 +39,7 @@ function App() {
     e.preventDefault();
     e.stopPropagation();
     console.log('DELETE BOOKMARK:', bookmark)
-    onDelete(curTab, bookmark.time, bookmark.id).then(() => {
-      setIsOpen({ ...isOpen, [bookmark.time.toString()]: -1 })
-    })
+    onDelete(curTab, bookmark.time, bookmark.id)
   }
   
   return (
@@ -116,8 +112,6 @@ function App() {
                         {<Bookmark 
                           bookmark={bookmark} 
                           curTab={curTab} 
-                          isOpen={isOpen} 
-                          setIsOpen={setIsOpen}
                           handleBookmarkPLay={handleBookmarkPLay}
                           handleBookmarkDelete={handleBookmarkDelete}
                         />}
