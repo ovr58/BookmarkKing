@@ -88,7 +88,24 @@ export const ChromeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           })
         })
       })
-    }, [fetchVideos, fetchCurSession, fetchCurTab, curTab.id])
+
+      const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+        if (areaName === 'sync' && changes[curSession]) {
+          const newVideos = changes[curSession].newValue ? JSON.parse(changes[curSession].newValue) : [];
+          setcurVideosWithBookmarks((prev) => ({
+            ...prev,
+            [curSession]: newVideos,
+          }));
+        }
+      };
+  
+      chrome.storage.onChanged.addListener(handleStorageChange);
+  
+      return () => {
+        chrome.storage.onChanged.removeListener(handleStorageChange);
+      };
+
+    }, [fetchVideos, fetchCurSession, fetchCurTab, curTab.id, curSession])
   
     return (
       <ChromeContext.Provider value={{ curTab, curSession, curVideosWithBookmarks, allowedUrls }}>
