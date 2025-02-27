@@ -367,10 +367,10 @@ const contentFunc = () => {
                         errorHandler(error, nativeMessage)
                     })
                 } else if (type === 'UPDATE') {
-                    const { time, title } = JSON.parse(value)
+                    const { time, bookMarkCaption } = JSON.parse(value)
                     currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
                         if (bookmark.time === time) {
-                            bookmark.title = title
+                            bookmark.bookMarkCaption = bookMarkCaption
                         }
                         return bookmark
                     })

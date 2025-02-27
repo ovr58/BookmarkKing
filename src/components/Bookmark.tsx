@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActiveTab, getTimestamp, VideoElementInfo } from '../utils';
+import { ActiveTab, getTimestamp, onUpdate, VideoElementInfo } from '../utils';
 
 import { MdDeleteForever } from "react-icons/md";
 import { HiPlayPause } from "react-icons/hi2";
@@ -22,6 +22,24 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
     const [isOpen, setIsOpen] = React.useState(true)
 
     const [isExpanded, setExpand] = React.useState(false)
+
+    const [isInputActive, setIsInputActive] = React.useState(false)
+
+    const [caption, setCaption] = React.useState(bookmark.bookMarkCaption)
+
+    const handleCaptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setCaption(e.target.value)
+    }
+
+    const handleEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        e.preventDefault()
+        const updatedBookmark = {
+            ...bookmark,
+            bookMarkCaption: caption
+        }
+        onUpdate(curTab, updatedBookmark)
+        setIsInputActive(false)
+    }
     
     return (
         <motion.div 
@@ -40,10 +58,23 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                             <h2 className="text-md leading-snug font-extrabold text-gray-50 truncate mb-1 sm:mb-0">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
                         </div>
                         <div className="flex items-end justify-between whitespace-normal gap-2">
-                            <div className="relative max-w-md max-h-fit text-indigo-100 h-full pr-2 mb-3">
-                                <p>
-                                    {bookmark.bookMarkCaption.length > 280 ? `${bookmark.bookMarkCaption.substring(0, 280)}` : `${bookmark.bookMarkCaption}`}
-                                </p>
+                            <div className="relative text-indigo-100 w-[100%] h-full pr-2 mb-3">
+                                {isInputActive ? 
+                                <textarea 
+                                    className="bg-indigo-600 text-indigo-100 w-full h-full border-0 outline-none overflow-y-auto focus:ring-2 focus:border-2 focus:border-b-blue-800 focus:rounded-md whitespace-normal resize-none" 
+                                    value={caption} 
+                                    onChange={(e) => handleCaptionChange(e)}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleEnter(e)}
+                                    onBlur={() => setIsInputActive(false)}
+                                    autoFocus
+                                />
+                                :
+                                <p onClick={(e) => (e.preventDefault(), e.stopPropagation(), setIsInputActive(true))}>
+                                    {bookmark.bookMarkCaption.length > 280 ? `${bookmark.bookMarkCaption.substring(0, 280)}...` : `${bookmark.bookMarkCaption}`}
+                                </p>}
+                                {bookmark.bookMarkCaption.length > 280 &&
                                 <motion.div 
                                     className="absolute top-0 -right-5 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="expand bookmark"
                                     onClick={(e) => (
@@ -56,6 +87,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                                 >
                                     <MdExpandMore className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="expand bookmark" />
                                 </motion.div>
+                                }
                             </div>
                             <div 
                                 className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out" aria-label="play from bookmark"

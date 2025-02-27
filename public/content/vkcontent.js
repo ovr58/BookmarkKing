@@ -366,11 +366,10 @@ const contentFunc = () => {
                             console.log('Bookmark updated:', value, currentVideoBookmarks)
                         })
                     }
-                    const { time, title } = JSON.parse(value)
-                    console.log('Update bookmark message received:', time, title, videoId)
+                    const { time, bookMarkCaption } = JSON.parse(value)
                     currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
                         if (bookmark.time === time) {
-                            bookmark.title = title
+                            bookmark.bookMarkCaption = bookMarkCaption
                         }
                         return bookmark
                     })

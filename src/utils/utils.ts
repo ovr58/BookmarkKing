@@ -204,3 +204,21 @@ export async function onDelete(tab: ActiveTab, time:number, id: string): Promise
         });
     }
 }
+
+export async function onUpdate(tab: ActiveTab, bookmark: VideoElementInfo): Promise<void> {
+    console.log('Update Bookmark')
+    
+    if (tab.id !== undefined) {
+        chrome.tabs.sendMessage(tab.id, {
+            type: "UPDATE",
+            value: JSON.stringify({
+                time: bookmark.time,
+                bookMarkCaption: bookmark.bookMarkCaption,
+            }),
+            videoId: bookmark.id,
+        }, () => {
+            console.log('POPUP - Bookmark Updated Callback Called')
+            return Promise.resolve();
+        });
+    }
+}
