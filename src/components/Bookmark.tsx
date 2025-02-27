@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActiveTab, getTimestamp, onUpdate, VideoElementInfo } from '../utils';
 
 import { MdDeleteForever } from "react-icons/md";
@@ -19,13 +19,17 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
     const url = new URL(curTab.url || '')
     const faviconUrl = `${url.origin}/favicon.ico`
 
-    const [isOpen, setIsOpen] = React.useState(true)
+    const [isOpen, setIsOpen] = useState(true)
 
-    const [isExpanded, setExpand] = React.useState(false)
+    const [isExpanded, setExpand] = useState(false)
 
-    const [isInputActive, setIsInputActive] = React.useState(false)
+    const [isInputActive, setIsInputActive] = useState(false)
 
-    const [caption, setCaption] = React.useState(bookmark.bookMarkCaption)
+    const [caption, setCaption] = useState(bookmark.bookMarkCaption)
+
+    const [collapsedHeight, setCollapsedHeight] = useState<{collapsedHeight: string, expandedHeight: string} | null>({collapsedHeight: 'auto', expandedHeight: 'auto'})
+
+    const collapsedRef = React.useRef<HTMLDivElement>(null)
 
     const handleCaptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCaption(e.target.value)
@@ -40,6 +44,27 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
         onUpdate(curTab, updatedBookmark)
         setIsInputActive(false)
     }
+
+    useEffect(() => {
+        if (collapsedRef.current) {
+            console.log(collapsedHeight)
+            setCollapsedHeight((prev) => {
+                if (prev?.collapsedHeight === 'auto') {
+                    return {
+                        collapsedHeight: `${collapsedRef.current?.clientHeight}px`,
+                        expandedHeight: 'auto'
+                    }
+                } else if (prev?.collapsedHeight !== 'auto' && prev?.expandedHeight === 'auto' && prev?.collapsedHeight !== `${collapsedRef.current?.clientHeight}px`) {
+                    return {
+                        ...prev,
+                        expandedHeight: `${collapsedRef.current?.clientHeight}px`
+                    }
+                } else {
+                    return prev
+                }
+            })
+        }
+    }, [isExpanded])
     
     return (
         <motion.div 
@@ -55,13 +80,18 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                         !isOpen
                     )}>
                         <div className="w-full cursor-pointer select-none sm:flex justify-between items-center mb-3">
-                            <h2 className="text-md leading-snug font-extrabold text-gray-50 truncate mb-1 sm:mb-0">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
+                            <h2 className="text-md leading-snug font-extrabold text-gray-50 truncate mb-1">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
                         </div>
-                        <div className="flex items-end justify-between whitespace-normal gap-2">
-                            <div className="relative text-indigo-100 w-[100%] h-full pr-2 mb-3">
+                        <motion.div
+                            initial={{ height: 'auto' }}
+                            animate={{ height: isExpanded ? collapsedHeight?.expandedHeight : collapsedHeight?.collapsedHeight }}
+                            transition={{ duration: 0.3 }}
+                        >
+                        <div ref={collapsedRef} className="flex items-end justify-between whitespace-normal gap-2" style={{ height: isExpanded ? collapsedHeight?.expandedHeight : collapsedHeight?.collapsedHeight }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                            <div className="relative text-indigo-100 w-full" style={{ height: isExpanded ? collapsedHeight?.expandedHeight : collapsedHeight?.collapsedHeight}}>
                                 {isInputActive ? 
                                 <textarea 
-                                    className="bg-indigo-600 text-indigo-100 w-full h-full border-0 outline-none overflow-y-auto focus:ring-2 focus:border-2 focus:border-b-blue-800 focus:rounded-md whitespace-normal resize-none" 
+                                    className="bg-indigo-600 text-indigo-100 w-full h-full border-0 outline-none overflow-y-auto rounded-lg focus:ring-2 focus:border-2 focus:border-b-blue-800 focus:rounded-md whitespace-normal resize-none custom-scrollbar" 
                                     value={caption} 
                                     onChange={(e) => handleCaptionChange(e)}
                                     onMouseDown={(e) => e.stopPropagation()}
@@ -71,10 +101,16 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                                     autoFocus
                                 />
                                 :
-                                <p onClick={(e) => (e.preventDefault(), e.stopPropagation(), setIsInputActive(true))}>
-                                    {bookmark.bookMarkCaption.length > 280 ? `${bookmark.bookMarkCaption.substring(0, 280)}...` : `${bookmark.bookMarkCaption}`}
-                                </p>}
-                                {bookmark.bookMarkCaption.length > 280 &&
+                                <span onClick={(e) => (e.preventDefault(), e.stopPropagation(), setIsInputActive(true))}>
+                                    {
+                                        bookmark.bookMarkCaption.length > 140 ? 
+                                            isExpanded ? 
+                                                `${bookmark.bookMarkCaption}` :
+                                                `${bookmark.bookMarkCaption.substring(0, 140)}...` 
+                                            : `${bookmark.bookMarkCaption}`
+                                    }
+                                </span>}
+                                {bookmark.bookMarkCaption.length > 140 && !isInputActive &&
                                 <motion.div 
                                     className="absolute top-0 -right-5 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="expand bookmark"
                                     onClick={(e) => (
@@ -102,6 +138,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                                 <MdDeleteForever className="w-[24px] h-auto object-fit rounded-full fill-white" aria-label="delete from bookmarks" />
                             </div>
                         </div>
+                        </motion.div>
                     </div>
                 </div>
             </div>

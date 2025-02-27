@@ -68,3 +68,25 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #00044e;
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  cursor:grab;
+  cursor:-webkit-grab;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #ffffff;
+}
