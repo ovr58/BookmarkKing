@@ -550,8 +550,6 @@ const contentFunc = () => {
             const nativeMessage = 'Error fetching bookmarks:'
             errorHandler(error, nativeMessage)
         })
-        console.log('Message received in spotifycontent.js:', obj)
-        return true
     }
 
     chrome.storage.local.get('isSpotifyOnMessageListenerAdded', (result) => {

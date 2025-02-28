@@ -383,7 +383,6 @@ const contentFunc = () => {
             const nativeMessage = 'Error handling message:'
             errorHandler(error, nativeMessage)
         })
-        return true
     }
 
     chrome.storage.local.get('isVkcontentMessageListenerAdded', (result) => {

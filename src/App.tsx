@@ -100,25 +100,29 @@ function App() {
             </div>
             <div className="bookmarks" id="bookmarks">
               {curVideosWithBookmarks[curSession] && curVideosWithBookmarks[curSession].length > 0 ? 
-                curVideosWithBookmarks[curSession].map((bookmark, i) => {
+              <AnimatePresence>
+                {curVideosWithBookmarks[curSession].map((bookmark, i) => {
                   console.log('BOOKMARK:', bookmark)
                   return (
                     <motion.div 
                       key={`'bookmark-'-${i}-${bookmark.time}`}
                       id={`'bookmark-'-${i}-${bookmark.time}`}
                       className="w-full h-auto py-1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                     >
-                      <AnimatePresence>
-                        {<Bookmark 
-                          bookmark={bookmark} 
-                          curTab={curTab} 
-                          handleBookmarkPLay={handleBookmarkPLay}
-                          handleBookmarkDelete={handleBookmarkDelete}
-                        />}
-                      </AnimatePresence>
+                      <Bookmark 
+                        bookmark={bookmark} 
+                        curTab={curTab} 
+                        handleBookmarkPLay={handleBookmarkPLay}
+                        handleBookmarkDelete={handleBookmarkDelete}
+                      />
                     </motion.div>
                   )
-                }) :
+                })}
+                </AnimatePresence>
+                :
                 <div className="bookmark">
                   <div className="bookmarkTitle">
                     {

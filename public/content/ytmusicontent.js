@@ -452,8 +452,6 @@ const contentFunc = () => {
             const nativeMessage = 'Error handling message:'
             errorHandler(error, nativeMessage)
         })
-        console.log('Message received in ytmusicontent.js:', obj)
-        return true
     }
 
     chrome.storage.local.get('isYtmusicOnMessageListenerAdded', (result) => {

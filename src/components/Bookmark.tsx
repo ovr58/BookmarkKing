@@ -3,7 +3,7 @@ import { ActiveTab, getTimestamp, onUpdate, VideoElementInfo } from '../utils';
 
 import { MdDeleteForever } from "react-icons/md";
 import { HiPlayPause } from "react-icons/hi2";
-import { MdExpandMore } from "react-icons/md";
+import { MdExpandMore, MdEdit, MdEditOff, MdSave } from "react-icons/md";
 
 import { motion } from 'framer-motion';
 
@@ -19,8 +19,6 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
     const url = new URL(curTab.url || '')
     const faviconUrl = `${url.origin}/favicon.ico`
 
-    const [isOpen, setIsOpen] = useState(true)
-
     const [isExpanded, setExpand] = useState(false)
 
     const [isInputActive, setIsInputActive] = useState(false)
@@ -35,14 +33,39 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
         setCaption(e.target.value)
     }
 
-    const handleEnter = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        e.preventDefault()
+    const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>, bookmark: VideoElementInfo) => {
+        if (e.key === 'Enter') {
+            handleSave(bookmark)
+        } else if (e.key === 'Escape') {
+            setIsInputActive(false)
+        }
+    }
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
+        e.stopPropagation()
+        handleSave(bookmark)
+    }
+
+    const handleSave = (bookmark: VideoElementInfo) => {
+        console.log('new caption', caption)
+        let newCaption = caption
+        // если caption пустая после замены всех пробелов на '' - делаем caption = bookmark.title
+        if (newCaption.replace(/\s/g, '') === '') {
+            setCaption(bookmark.title)
+            newCaption = bookmark.title
+        }
         const updatedBookmark = {
             ...bookmark,
-            bookMarkCaption: caption
+            bookMarkCaption: newCaption
         }
-        onUpdate(curTab, updatedBookmark)
-        setIsInputActive(false)
+        onUpdate(curTab, updatedBookmark).then(() => {
+            if (caption.length > 140) {
+                setExpand(true)
+            }
+            setCollapsedHeight({collapsedHeight: 'auto', expandedHeight: 'auto'})
+            setIsInputActive(false)
+            console.log('Message Sent')
+        })
     }
 
     useEffect(() => {
@@ -67,18 +90,13 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
     }, [isExpanded])
     
     return (
-        <motion.div 
+        <div 
             className="max-w-2xl mx-auto bg-indigo-600 shadow-lg rounded-lg overflow-hidden"
-            initial={{ opacity: 1, height: '36px' }}
-            animate={{ height: isOpen ? 'auto' : '36px'}}
-            exit={{ opacity: 0, height: '36px', margin: 0, padding: 0 }}
-            transition={{ duration: 0.3 }}>
+        >
             <div className="px-2 py-2">
                 <div className="flex items-start">
                     <img className="w-6 h-6 mr-2 pb-2" src={faviconUrl} alt="bookmark-icon" />
-                    <div className="flex-grow truncate" onClick={() => setIsOpen(
-                        !isOpen
-                    )}>
+                    <div className="flex-grow truncate">
                         <div className="w-full cursor-pointer select-none sm:flex justify-between items-center mb-3">
                             <h2 className="text-md leading-snug font-extrabold text-gray-50 truncate mb-1">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
                         </div>
@@ -96,12 +114,12 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                                     onChange={(e) => handleCaptionChange(e)}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleEnter(e)}
-                                    onBlur={() => setIsInputActive(false)}
+                                    onKeyDown={(e) => handleKey(e, bookmark)}
+                                    // onBlur={() => setIsInputActive(false)}
                                     autoFocus
                                 />
                                 :
-                                <span onClick={(e) => (e.preventDefault(), e.stopPropagation(), setIsInputActive(true))}>
+                                <span onClick={(e) => (e.stopPropagation(), setIsInputActive(true))}>
                                     {
                                         bookmark.bookMarkCaption.length > 140 ? 
                                             isExpanded ? 
@@ -114,7 +132,6 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                                 <motion.div 
                                     className="absolute top-0 -right-5 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="expand bookmark"
                                     onClick={(e) => (
-                                        e.preventDefault(),
                                         e.stopPropagation(),
                                         setExpand(!isExpanded))
                                     }
@@ -123,6 +140,36 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                                 >
                                     <MdExpandMore className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="expand bookmark" />
                                 </motion.div>
+                                }
+                                {isInputActive ?
+                                <>
+                                <div 
+                                    className="absolute top-0 -right-5 z-auto bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="discard changes bookmark"
+                                    onClick={(e) => (
+                                        e.stopPropagation(),
+                                        setIsInputActive(false)
+                                    )}
+                                >
+                                    <MdEditOff className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="discard changes bookmark" />
+                                </div>
+                                <div 
+                                    className="absolute top-0 -right-10 z-50 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="save bookmark"
+                                    onClick={(e) => handleClick(e, bookmark)}
+                                >
+                                    <MdSave className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="save bookmark"/>
+                                </div>
+                                </>
+                                :
+                                <div 
+                                    className={`absolute top-0 -right-${bookmark.bookMarkCaption.length > 140 ? '10': '5'} bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out`}
+                                    aria-label="edit bookmark"
+                                    onClick={(e) => (
+                                        e.stopPropagation(),
+                                        setIsInputActive(true)
+                                    )}
+                                >
+                                    <MdEdit className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="edit bookmark" />
+                                </div>
                                 }
                             </div>
                             <div 
@@ -142,7 +189,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, handleBookmarkPLa
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
 

@@ -11,7 +11,7 @@ interface ScriptResult {
 export interface VideoElementInfo {
     id: string;
     class: string;
-    title?: string;
+    title: string;
     urlTemplate?: string;
     rect: {
         width: number;

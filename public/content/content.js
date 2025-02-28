@@ -390,8 +390,6 @@ const contentFunc = () => {
             const nativeMessage = 'Error handling fetch bookmarks:'
             errorHandler(error, nativeMessage)
         })
-        console.log('Message received in content.js:', obj)
-        return true
     }
 
     chrome.storage.local.get('isMessageListenerAdded', (result) => {

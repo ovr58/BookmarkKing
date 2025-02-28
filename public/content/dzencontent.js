@@ -382,8 +382,6 @@ const contentFunc = () => {
             const nativeMessage = 'Error handling onMessage:'
             errorHandler(error, nativeMessage)
         })
-        console.log('Message received in dzencontent.js:', obj)
-        return true
     }
 
     chrome.storage.local.get('isDzenMessageListenerAdded', (result) => {
