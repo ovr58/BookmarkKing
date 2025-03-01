@@ -1,16 +1,12 @@
-import { AnimatePresence, motion } from 'framer-motion';
 import './App.css'
-import Bookmark from './components/Bookmark';
 
 import { 
   localizeContent, 
-  VideoElementInfo,
   openVideo,
-  onPlay,
-  onDelete,
 } from './utils'
 import { useEffect } from 'react'
 import useChromeApi from './context/useChromeApi';
+import BookmarksContainer from './components/BookmarksContainer';
 
 
 function App() {
@@ -29,19 +25,6 @@ function App() {
     openVideo(video)
   }
 
-  const handleBookmarkPLay = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await onPlay(curTab, bookmark.time, bookmark.id)
-  }
-
-  const handleBookmarkDelete = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('DELETE BOOKMARK:', bookmark)
-    onDelete(curTab, bookmark.time, bookmark.id)
-  }
-  
   return (
     <>
       <div id="extensionName" className="title">
@@ -100,28 +83,10 @@ function App() {
             </div>
             <div className="bookmarks" id="bookmarks">
               {curVideosWithBookmarks[curSession] && curVideosWithBookmarks[curSession].length > 0 ? 
-              <AnimatePresence>
-                {curVideosWithBookmarks[curSession].map((bookmark, i) => {
-                  console.log('BOOKMARK:', bookmark)
-                  return (
-                    <motion.div 
-                      key={`'bookmark-'-${i}-${bookmark.time}`}
-                      id={`'bookmark-'-${i}-${bookmark.time}`}
-                      className="w-full h-auto py-1"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
-                      <Bookmark 
-                        bookmark={bookmark} 
-                        curTab={curTab} 
-                        handleBookmarkPLay={handleBookmarkPLay}
-                        handleBookmarkDelete={handleBookmarkDelete}
-                      />
-                    </motion.div>
-                  )
-                })}
-                </AnimatePresence>
+                <BookmarksContainer 
+                  curSessionVideos={curVideosWithBookmarks[curSession]} 
+                  curTab={curTab}
+                />
                 :
                 <div className="bookmark">
                   <div className="bookmarkTitle">
