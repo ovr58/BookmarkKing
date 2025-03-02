@@ -26,7 +26,9 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen
 
     const [caption, setCaption] = useState(bookmark.bookMarkCaption)
 
-    const [collapsedHeight, setCollapsedHeight] = useState<{collapsedHeight: string, expandedHeight: string} | null>({collapsedHeight: 'auto', expandedHeight: 'auto'})
+    const [collapsedHeight, setCollapsedHeight] = useState<{collapsedHeight: string, expandedHeight: string}>({collapsedHeight: 'auto', expandedHeight: 'auto'})
+
+    const [afterEditCaption, setAfterEditCaption] = useState(false)
 
     const collapsedRef = React.useRef<HTMLDivElement>(null)
 
@@ -60,6 +62,8 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen
             bookMarkCaption: newCaption
         }
         onUpdate(curTab, updatedBookmark).then(() => {
+            setAfterEditCaption(true)
+
             if (caption.length > 140) {
                 setExpand(true)
             }
@@ -72,24 +76,36 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, isOpen, setIsOpen
     useEffect(() => {
         if (collapsedRef.current) {
             console.log(collapsedHeight)
-            setCollapsedHeight((prev) => {
-                if (collapsedHeight?.collapsedHeight === 'auto' && collapsedHeight?.expandedHeight === 'auto' && isExpanded === true) {
+            if (`${collapsedRef.current?.clientHeight}px` === collapsedHeight.collapsedHeight || `${collapsedRef.current?.clientHeight}px` === collapsedHeight.expandedHeight) {
+                return
+            }
+            if (afterEditCaption) {
+                setAfterEditCaption(false)
+                return
+            }
+            setCollapsedHeight(() => {
+                if (isExpanded === true) {
                     return {
                         collapsedHeight: 'auto',
                         expandedHeight: `${collapsedRef.current?.clientHeight}px`
                     }
-                } else if (collapsedHeight?.collapsedHeight === 'auto' && collapsedHeight?.expandedHeight === 'auto' && isExpanded === false) {
+                } else if (isExpanded === false) {
                     return {
                         collapsedHeight: `${collapsedRef.current?.clientHeight}px`,
                         expandedHeight: 'auto'
                     }
                 } else {
-                    return prev
+                    return {
+                        collapsedHeight: collapsedHeight.collapsedHeight,
+                        expandedHeight: collapsedHeight.expandedHeight
+                    }
                 }
             })
         }
-    }, [isExpanded, collapsedHeight])
+    }, [isExpanded, collapsedHeight, afterEditCaption])
     
+    
+
     return (
     <div className="px-1 py-1">
         <div className="flex items-start">

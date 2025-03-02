@@ -54,17 +54,12 @@ const getUrlParams = async (url) => {
     console.log("From background - Tab updated:", tabId, changeInfo, tab);
     if (changeInfo.status === 'complete') {
         const handleUpdate = async () => {
-
             const urlParams = await getUrlParams(tab.url)
             console.log("From background on updated - urlParams:", urlParams);
             urlParams !== '' && chrome.tabs.sendMessage(tabId, {
                 type: 'NEW',
                 videoId: urlParams
-            }, (response) => {
-                if (response === false) {
-                    console.log("From background - Message not sent on updated:", response);
-                    return
-                }
+            }, () => {
                 if (chrome.runtime.lastError) {
                     console.log("From background - Error sending message:", chrome.runtime.lastError);
                 } else {
@@ -92,11 +87,7 @@ const getUrlParams = async (url) => {
                             chrome.tabs.sendMessage(activeInfo.tabId, {
                                 type: 'NEW',
                                 videoId: urlParams
-                            }, (response) => {
-                                if (response === false) {
-                                    console.log("From background - Message not sent on updated in activated:", response);
-                                    return
-                                }
+                            }, () => {
                                 if (chrome.runtime.lastError) {
                                     console.log("From background - Error sending message:", chrome.runtime.lastError);
                                 } else {
@@ -111,11 +102,11 @@ const getUrlParams = async (url) => {
                 chrome.tabs.sendMessage(activeInfo.tabId, {
                     type: 'NEW',
                     videoId: urlParams
-                }, (response) => {
+                }, () => {
                     if (chrome.runtime.lastError) {
                         console.log("From background - Error sending message:", chrome.runtime.lastError);
                     } else {
-                        console.log("From background - Message sent successfully:", response);
+                        console.log("From background - Message sent successfully");
                     }
                 });
             }
@@ -139,13 +130,8 @@ const getUrlParams = async (url) => {
     } else if (request.type === "ELEMENT_FOUND") {
         const handleElementFound = async () => {
             const urlParams = await getUrlParams(sender.tab.url)
-
             console.log("From background - Element found, sending 'NEW' message again");
             chrome.tabs.sendMessage(sender.tab.id, { type: 'NEW', videoId: urlParams }, (response) => {
-                if (response === false) {
-                    console.log("From background - Message not sent on element found:", response);
-                    return
-                }
                 if (chrome.runtime.lastError) {
                     console.log("From background - Error sending message:", chrome.runtime.lastError);
                 } else {
@@ -154,5 +140,5 @@ const getUrlParams = async (url) => {
             });
         }
         handleElementFound().catch(console.error);
-    } 
+    }
 });
