@@ -11,8 +11,8 @@ import { motion } from 'framer-motion';
 interface BookmarkProps {
     bookmark: VideoElementInfo,
     curTab: ActiveTab;
-    bookmarkState: { [key: number]: {isOpen: boolean, isSelected: boolean} };
-    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: number]: {isOpen: boolean, isSelected: boolean} }>>;
+    bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean} };
+    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: string]: {isOpen: boolean, isSelected: boolean} }>>;
     handleBookmarkPLay: (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => void;
 }
 
@@ -74,16 +74,18 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
     const handleBookmarkSelect = (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
         e.preventDefault()
         e.stopPropagation()
+        const key = bookmark.time.toString()
         setBookmarkState(
-            {...bookmarkState, [bookmark.time]: {isOpen: bookmarkState[bookmark.time].isOpen, isSelected: !bookmarkState[bookmark.time].isSelected}}
+            {...bookmarkState, [key]: {isOpen: bookmarkState[key].isOpen, isSelected: !bookmarkState[key].isSelected}}
         )
     }
 
     const handleBookmarkOpen = (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
         e.preventDefault()
         e.stopPropagation()
+        const key = bookmark.time.toString()
         setBookmarkState(
-            {...bookmarkState, [bookmark.time]: {isOpen: !bookmarkState[bookmark.time].isOpen, isSelected: bookmarkState[bookmark.time].isSelected}}
+            {...bookmarkState, [key]: {isOpen: !bookmarkState[key].isOpen, isSelected: bookmarkState[key].isSelected}}
         )
     }
 
@@ -98,8 +100,8 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
     
     return (
     <div className="px-1 py-1 relative" key={bookmark.time}>
-        <div className={`absolute left-0 top-0 ${bookmarkState[bookmark.time].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[48px] z-50 bg-red-600 rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
-            {bookmarkState[bookmark.time].isSelected ? 'V' : ''}
+        <div className={`absolute left-0 top-0 ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[48px] z-50 bg-red-600 rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
+            {bookmarkState[bookmark.time.toString()].isSelected ? 'V' : ''}
         </div>
         <div className="flex items-start">
             <div className="flex-grow truncate" onClick={(e) => handleBookmarkOpen(e, bookmark)}>
