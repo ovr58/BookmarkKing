@@ -190,14 +190,14 @@ export async function onPlay(tab:ActiveTab ,time: number, id: string): Promise<v
     return Promise.resolve();
 }
 
-export async function onDelete(tab: ActiveTab, time:number, id: string): Promise<void> {
+export async function onDelete(tab: ActiveTab, bookmarks: VideoElementInfo[]): Promise<void> {
     console.log('Delete Bookmark')
-    
+    const times = bookmarks.map(bookmark => bookmark.time);
     if (tab.id !== undefined) {
         chrome.tabs.sendMessage(tab.id, {
             type: "DELETE",
-            value: time,
-            videoId: id
+            value: times,
+            videoId: bookmarks[0].id
         }, () => {
             console.log('POPUP - Bookmark Deleted Callback Called')
             return Promise.resolve();

@@ -346,14 +346,14 @@ const contentFunc = () => {
                     dzenPlayer.currentTime = value
                     dzenPlayer.play()
                 } else if (type === 'DELETE') {
+                    console.log('Delete bookmarks:', value, currentVideoBookmarks)
+                    currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
                     const handleDeleteBookmark = async () => {
                         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('DELETE')
                             console.log('Bookmark deleted:', value, currentVideoBookmarks)
                         })
                     }
-                    console.log('Delete bookmark:', value, currentVideoBookmarks)
-                    currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => bookmark.time != value)
                     handleDeleteBookmark().catch(error => {
                         const nativeMessage = 'Error deleting bookmark:'
                         errorHandler(error, nativeMessage)

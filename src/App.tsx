@@ -84,7 +84,7 @@ function App() {
             <div className="bookmarks" id="bookmarks">
               {curVideosWithBookmarks[curSession] && curVideosWithBookmarks[curSession].length > 0 ? 
                 <BookmarksContainer 
-                  curSessionVideos={curVideosWithBookmarks[curSession]} 
+                  curSessionVideo={curVideosWithBookmarks[curSession]} 
                   curTab={curTab}
                 />
                 :

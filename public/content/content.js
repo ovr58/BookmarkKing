@@ -354,8 +354,8 @@ const contentFunc = () => {
                 } else if (type === 'PLAY') {
                     youtubePlayer.currentTime = value
                 } else if (type === 'DELETE') {
-                    console.log('Delete bookmark:', value, currentVideoBookmarks)
-                    currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => bookmark.time != value)
+                    console.log('Delete bookmarks:', value, currentVideoBookmarks)
+                    currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
                     const handleDeleteBookmark = async () => {
                         chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('DELETE')

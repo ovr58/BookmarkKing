@@ -1,25 +1,38 @@
 import { AnimatePresence, motion } from 'motion/react'
 import React, { useState } from 'react'
 import Bookmark from './Bookmark'
-import { onPlay, VideoElementInfo } from '../utils'
+import { onDelete, onPlay, VideoElementInfo } from '../utils'
 import UiContainer from './UiContainer';
 
 interface BookmarksContainerProps {
-  curSessionVideos: VideoElementInfo[];
+  curSessionVideo: VideoElementInfo[];
   curTab: { url: string; id: number; };
 }
 
-const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideos, curTab }) => {
+const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo, curTab }) => {
 
     const [bookmarkState, setBookmarkState] = useState<{ [key: string]: {isOpen: boolean, isSelected: boolean} }>(
-        Object.fromEntries(curSessionVideos.map(video => [
-          video.time.toString(), 
+        {...Object.fromEntries(curSessionVideo.map(bookmark => [
+          bookmark.time.toString(), 
           {
             isOpen: true,
             isSelected: false
           }
-        ]))
+        ]))}
       );
+
+    const [sortType, setSortType] = useState<'color' | 'timedisc' | 'timeasc'>('timeasc')
+
+    const curSessionVideoSorted = curSessionVideo.sort((a, b) => {
+      if (sortType === 'timeasc') {
+        return a.time - b.time
+      } else if (sortType === 'timedisc') {
+        return b.time - a.time
+      } else {
+        return 0
+      }
+    }
+    )
 
     const handleBookmarkPLay = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
         e.preventDefault();
@@ -27,17 +40,21 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
         await onPlay(curTab, bookmark.time, bookmark.id)
       }
     
-    // const handleBookmarkDelete = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
-    // e.preventDefault();
-    // e.stopPropagation();
-    // console.log('DELETE BOOKMARK:', bookmark)
-    // onDelete(curTab, bookmark.time, bookmark.id)
-    // }
+    const handleBookmarkDelete = async () => {
+      const bookmarksToDelete = curSessionVideo.filter(bookmark => bookmarkState[bookmark.time.toString()].isSelected)
+      if (bookmarksToDelete.length === 0) return
+      onDelete(curTab, bookmarksToDelete)
+    }
       
   return (
     <AnimatePresence>
-      <UiContainer bookmarkState={bookmarkState} setBookmarkState={setBookmarkState} />
-        {curSessionVideos.map((bookmark, i) => {
+      <UiContainer 
+        bookmarkState={bookmarkState} 
+        setBookmarkState={setBookmarkState}
+        handleDelete={handleBookmarkDelete}
+        setSortType={setSortType} 
+      />
+        {curSessionVideoSorted.map((bookmark, i) => {
             console.log('BOOKMARK:', bookmark)
             return (
             <motion.div 

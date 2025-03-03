@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActiveTab, getTimestamp, onUpdate, VideoElementInfo } from '../utils';
 
-// import { MdDeleteForever } from "react-icons/md";
 import { HiPlayPause } from "react-icons/hi2";
 import { MdExpandMore, MdEdit, MdEditOff, MdSave } from "react-icons/md";
 
