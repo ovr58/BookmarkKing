@@ -10,8 +10,14 @@ interface BookmarksContainerProps {
 
 const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideos, curTab }) => {
 
-    const [isOpen, setIsOpen] = useState<{ [key: number]: boolean }>(
-        Object.fromEntries(curSessionVideos.map(video => [video.time, true]))
+    const [bookmarkState, setBookmarkState] = useState<{ [key: number]: {isOpen: boolean, isSelected: boolean} }>(
+        Object.fromEntries(curSessionVideos.map(video => [
+          video.time, 
+          {
+            isOpen: true,
+            isSelected: false
+          }
+        ]))
       );
 
     const handleBookmarkPLay = async (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => {
@@ -37,15 +43,15 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
                 id={`'bookmark-'-${i}-${bookmark.time}`}
                 className="w-full h-auto mb-2 max-w-2xl mx-auto bg-indigo-600 shadow-lg rounded-lg overflow-hidden"
                 initial={{ opacity: 1, height: '24px' }}
-                animate={{ height: isOpen[bookmark.time] ? 'auto' : '24px'}}
+                animate={{ height: bookmarkState[bookmark.time].isOpen ? 'auto' : '24px'}}
                 exit={{ opacity: 0, height: '1px' }}
                 transition={{ duration: 0.5 }}
             >
                 <Bookmark 
                     bookmark={bookmark} 
                     curTab={curTab}
-                    isOpen={isOpen}
-                    setIsOpen={setIsOpen} 
+                    bookmarkState={bookmarkState}
+                    setBookmarkState={setBookmarkState} 
                     handleBookmarkPLay={handleBookmarkPLay}
                     // handleBookmarkDelete={handleBookmarkDelete}
                 />
