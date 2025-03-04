@@ -19,6 +19,7 @@ const UiContainer: React.FC<UiContainerProps> = ({
     setSortType
 }) => {
 
+    const [nextSortType, setNextSortType] = React.useState('timedisc');
     console.log('UI CONTAINER:', bookmarkState)
 
     return (
@@ -39,15 +40,18 @@ const UiContainer: React.FC<UiContainerProps> = ({
             })}/>
             <DeleteSelectionButton onClick={handleDelete}/>
             <SortButton onClick={(() => {
-                    setSortType((prevSortType) => {
-                        if (prevSortType === 'color') {
-                            return 'timeasc';
-                        } else if (prevSortType === 'timeasc') {
+                    setSortType((sortType) => {
+                        if (sortType === 'timeasc') {
+                            setNextSortType('color');
                             return 'timedisc';
+                        } else if (sortType === 'timedisc') {
+                            setNextSortType('timeasc');
+                            return 'color';
                         }
-                        return 'color';
+                        setNextSortType('timedisc');
+                        return 'timeasc';
                     })
-            })}/>
+            })} nextSortType={nextSortType}/>
             {/* <ColorButton /> */}
         </div>
     );

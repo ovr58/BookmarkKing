@@ -103,5 +103,8 @@
     },
     "selectVideoElement": {
       "message": "Select video element"
+    },
+    "expandToggle": {
+      "message": "Expand / Collapse"
     }
   }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActiveTab, getTimestamp, onUpdate, VideoElementInfo } from '../utils';
 
 import { HiPlayPause } from "react-icons/hi2";
+import { GrRadialSelected } from "react-icons/gr";
 import { MdExpandMore, MdEdit, MdEditOff, MdSave } from "react-icons/md";
 
 import { motion } from 'framer-motion';
@@ -99,8 +100,10 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
     
     return (
     <div className="px-1 py-1 relative" key={bookmark.time}>
-        <div className={`absolute left-0 top-0 ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[48px] z-50 bg-red-600 rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
-            {bookmarkState[bookmark.time.toString()].isSelected ? 'V' : ''}
+        <div className={`absolute left-0 top-0 content-center items-center ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[48px] z-50 bg-red-600 rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
+            {bookmarkState[bookmark.time.toString()].isSelected ? 
+                <GrRadialSelected className='stroke-white w-full h-auto my-auto' /> : ''
+            }
         </div>
         <div className="flex items-start">
             <div className="flex-grow truncate" onClick={(e) => handleBookmarkOpen(e, bookmark)}>

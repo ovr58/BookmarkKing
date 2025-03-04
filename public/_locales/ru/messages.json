@@ -100,5 +100,8 @@
     },
     "selectVideoElement": {
       "message": "Выберите элемент видео"
+    },
+    "expandToggle": {
+      "message": "Развернуть/свернуть"
     }
   }
