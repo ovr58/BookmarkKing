@@ -10,7 +10,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'public/_locales/*.*',
+          src: 'public/_locales/**/*.*',
           dest: '_locales',
         },
         {

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import React, { useState } from 'react'
 import Bookmark from './Bookmark'
-import { onDelete, onPlay, VideoElementInfo } from '../utils'
+import { onDelete, onPlay, onUpdate, VideoElementInfo } from '../utils'
 import UiContainer from './UiContainer';
 
 interface BookmarksContainerProps {
@@ -11,12 +11,13 @@ interface BookmarksContainerProps {
 
 const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo, curTab }) => {
 
-    const [bookmarkState, setBookmarkState] = useState<{ [key: string]: {isOpen: boolean, isSelected: boolean} }>(
+    const [bookmarkState, setBookmarkState] = useState<{ [key: string]: {isOpen: boolean, isSelected: boolean, color: string} }>(
         {...Object.fromEntries(curSessionVideo.map(bookmark => [
           bookmark.time.toString(), 
           {
             isOpen: true,
-            isSelected: false
+            isSelected: false,
+            color: bookmark.color
           }
         ]))}
       );
@@ -45,6 +46,13 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
       if (bookmarksToDelete.length === 0) return
       onDelete(curTab, bookmarksToDelete)
     }
+
+    const handleColorChange = (color: string) => {
+      console.log('Color Change', color)
+      const bookmarksToChange = curSessionVideo.filter(bookmark => bookmarkState[bookmark.time.toString()].isSelected)
+      if (bookmarksToChange.length === 0) return
+      onUpdate(curTab, bookmarksToChange)
+    }
       
   return (
     <AnimatePresence>
@@ -52,6 +60,7 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
         bookmarkState={bookmarkState} 
         setBookmarkState={setBookmarkState}
         handleDelete={handleBookmarkDelete}
+        handleColorChange={handleColorChange}
         setSortType={setSortType} 
       />
         {curSessionVideoSorted.map((bookmark, i) => {
@@ -72,7 +81,6 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
                     bookmarkState={bookmarkState}
                     setBookmarkState={setBookmarkState} 
                     handleBookmarkPLay={handleBookmarkPLay}
-                    // handleBookmarkDelete={handleBookmarkDelete}
                 />
             </motion.div>
             )

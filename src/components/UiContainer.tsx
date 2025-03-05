@@ -3,12 +3,13 @@ import SelectAllButton from "./SelectAllButton";
 import ExpandCollapseButton from "./ExpandCollapseButton";
 import DeleteSelectionButton from "./DeleteSelectionButton";
 import SortButton from "./SortButton";
-// import ColorButton from "./ColorButton";
+import ColorButton from "./ColorButton";
 
 interface UiContainerProps {
-    bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean} };
-    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: string]: {isOpen: boolean, isSelected: boolean} }>>;
+    bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean, color: string} };
+    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: string]: {isOpen: boolean, isSelected: boolean, color: string} }>>;
     handleDelete: () => void;
+    handleColorChange: (color: string) => void;
     setSortType: React.Dispatch<React.SetStateAction<'color' | 'timedisc' | 'timeasc'>>;
 }
 
@@ -16,10 +17,14 @@ const UiContainer: React.FC<UiContainerProps> = ({
     bookmarkState,
     setBookmarkState,
     handleDelete,
+    handleColorChange,
     setSortType
 }) => {
 
     const [nextSortType, setNextSortType] = React.useState('timedisc');
+    const isAnySelected = Object.keys(bookmarkState).some((key: string) => bookmarkState[key].isSelected);
+    const firstSelectedColor = isAnySelected ? bookmarkState[Object.keys(bookmarkState).find((key: string) => bookmarkState[key].isSelected)!].color : '#FF5733';
+    const isAllExpanded = Object.keys(bookmarkState).every((key: string) => bookmarkState[key].isOpen);
     console.log('UI CONTAINER:', bookmarkState)
 
     return (
@@ -37,22 +42,27 @@ const UiContainer: React.FC<UiContainerProps> = ({
                     newBookmarkState[key].isOpen = !newBookmarkState[key].isOpen;
                 });
                 setBookmarkState(newBookmarkState);
-            })}/>
-            <DeleteSelectionButton onClick={handleDelete}/>
+            })} isAllExpanded={isAllExpanded}/>
             <SortButton onClick={(() => {
-                    setSortType((sortType) => {
-                        if (sortType === 'timeasc') {
-                            setNextSortType('color');
-                            return 'timedisc';
-                        } else if (sortType === 'timedisc') {
-                            setNextSortType('timeasc');
-                            return 'color';
-                        }
-                        setNextSortType('timedisc');
-                        return 'timeasc';
-                    })
+                setSortType((sortType) => {
+                    if (sortType === 'timeasc') {
+                        setNextSortType('color');
+                        return 'timedisc';
+                    } else if (sortType === 'timedisc') {
+                        setNextSortType('timeasc');
+                        return 'color';
+                    }
+                    setNextSortType('timedisc');
+                    return 'timeasc';
+                })
             })} nextSortType={nextSortType}/>
-            {/* <ColorButton /> */}
+            {isAnySelected &&
+            <>
+                <DeleteSelectionButton onClick={handleDelete}/>
+
+                <ColorButton handleColorChange={handleColorChange} firstSelectedColor={firstSelectedColor} />
+            </>
+            }
         </div>
     );
 }

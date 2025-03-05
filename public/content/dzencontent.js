@@ -301,7 +301,8 @@ const contentFunc = () => {
             urlTemplate: 'https://dzen.ru/video/watch/',
             time: currentTime,
             title: currVideoTitle,
-            bookMarkCaption: currVideoTitle
+            bookMarkCaption: currVideoTitle,
+            color: '#FF8D1A'
         }
         
         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
@@ -359,19 +360,22 @@ const contentFunc = () => {
                         errorHandler(error, nativeMessage)
                     })
                 } else if (type === 'UPDATE') {
+                    const valueArray = JSON.parse(value)
+                    valueArray.forEach((element) => {
+                        currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
+                            if (bookmark.time === element.time) {
+                                bookmark.bookMarkCaption = element.bookMarkCaption
+                                bookmark.color = element.color
+                            }
+                            return bookmark
+                        })
+                    })
                     const handleUpdateBookmark = async () => {
                         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('UPATE')
                             console.log('Bookmark updated:', value, currentVideoBookmarks)
                         })
                     }
-                    const { time, bookMarkCaption } = JSON.parse(value)
-                    currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
-                        if (bookmark.time === time) {
-                            bookmark.bookMarkCaption = bookMarkCaption
-                        }
-                        return bookmark
-                    })
                     handleUpdateBookmark().catch(error => {
                         const nativeMessage = 'Error updating bookmark:'
                         errorHandler(error, nativeMessage)

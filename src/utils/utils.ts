@@ -22,6 +22,7 @@ export interface VideoElementInfo {
     duration: number;
     time: number;
     bookMarkCaption: string;
+    color: string;
 }
 
 interface ScriptResultWithVideoElement {
@@ -155,7 +156,8 @@ export async function checkIfTabHasVideoElement(activeTab: ActiveTab): Promise<V
                         duration: video.duration,
                         time: 0,
                         title: 'Start',
-                        bookMarkCaption: 'Start of the video'
+                        bookMarkCaption: 'Start of the video',
+                        color: '#FF5733'
                     }
                 });
         }
@@ -205,17 +207,23 @@ export async function onDelete(tab: ActiveTab, bookmarks: VideoElementInfo[]): P
     }
 }
 
-export async function onUpdate(tab: ActiveTab, bookmark: VideoElementInfo): Promise<void> {
+export async function onUpdate(tab: ActiveTab, bookmarks: VideoElementInfo[]): Promise<void> {
     console.log('Update Bookmark')
     
     if (tab.id !== undefined) {
         chrome.tabs.sendMessage(tab.id, {
             type: "UPDATE",
-            value: JSON.stringify({
-                time: bookmark.time,
-                bookMarkCaption: bookmark.bookMarkCaption,
-            }),
-            videoId: bookmark.id,
+            value: JSON.stringify(
+                        bookmarks.map((bookmark) => 
+                        (
+                            {
+                                time: bookmark.time,
+                                color: bookmark.color,
+                                bookMarkCaption: bookmark.bookMarkCaption
+                            }
+                        )
+                )),
+            videoId: bookmarks[0].id,
         }, () => {
             console.log('POPUP - Bookmark Updated Callback Called')
             return Promise.resolve();

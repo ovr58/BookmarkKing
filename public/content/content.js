@@ -243,7 +243,8 @@ const contentFunc = () => {
             urlTemplate: 'https://www.youtube.com/watch?v=',
             time: currentTime,
             title: currVideoTitle,
-            bookMarkCaption: currVideoTitle
+            bookMarkCaption: currVideoTitle,
+            color: '#FF5733'
         }
         
         chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
@@ -367,12 +368,15 @@ const contentFunc = () => {
                         errorHandler(error, nativeMessage)
                     })
                 } else if (type === 'UPDATE') {
-                    const { time, bookMarkCaption } = JSON.parse(value)
-                    currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
-                        if (bookmark.time === time) {
-                            bookmark.bookMarkCaption = bookMarkCaption
-                        }
-                        return bookmark
+                    const valueArray = JSON.parse(value)
+                    valueArray.forEach((element) => {
+                        currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
+                            if (bookmark.time === element.time) {
+                                bookmark.bookMarkCaption = element.bookMarkCaption
+                                bookmark.color = element.color
+                            }
+                            return bookmark
+                        })
                     })
                     const handleUpdateBookmark = async () => {
                         chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {

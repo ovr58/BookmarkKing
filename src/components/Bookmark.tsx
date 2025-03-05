@@ -11,8 +11,8 @@ import { motion } from 'framer-motion';
 interface BookmarkProps {
     bookmark: VideoElementInfo,
     curTab: ActiveTab;
-    bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean} };
-    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: string]: {isOpen: boolean, isSelected: boolean} }>>;
+    bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean, color: string} };
+    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: string]: {isOpen: boolean, isSelected: boolean, color: string } }>>;
     handleBookmarkPLay: (e: React.MouseEvent<HTMLDivElement>, bookmark: VideoElementInfo) => void;
 }
 
@@ -63,7 +63,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
             ...bookmark,
             bookMarkCaption: newCaption
         }
-        onUpdate(curTab, updatedBookmark).then(() => {
+        onUpdate(curTab, [updatedBookmark]).then(() => {
             setExpand(false)
             setExpandedHeight('auto')
             setIsInputActive(false)
@@ -76,7 +76,10 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
         e.stopPropagation()
         const key = bookmark.time.toString()
         setBookmarkState(
-            {...bookmarkState, [key]: {isOpen: bookmarkState[key].isOpen, isSelected: !bookmarkState[key].isSelected}}
+            {...bookmarkState, [key]: {
+                ...bookmarkState[key],
+                isSelected: !bookmarkState[key].isSelected
+            }}
         )
     }
 
@@ -85,7 +88,10 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
         e.stopPropagation()
         const key = bookmark.time.toString()
         setBookmarkState(
-            {...bookmarkState, [key]: {isOpen: !bookmarkState[key].isOpen, isSelected: bookmarkState[key].isSelected}}
+            {...bookmarkState, [key]: {
+                ...bookmarkState[key],
+                isOpen: !bookmarkState[key].isOpen
+            }}
         )
     }
 
@@ -189,7 +195,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
                 </motion.div>
             </div>
         </div>
-        <div className={`absolute left-0 top-0 content-center z-10 items-center ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[100%] bg-red-600 rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
+        <div className={`absolute left-0 top-0 content-center z-10 items-center ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[100%] bg-[${bookmark.color}] rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
             {bookmarkState[bookmark.time.toString()].isSelected ? 
                 <GrRadialSelected className='stroke-white w-full h-auto my-auto z-0' /> : ''
             }
