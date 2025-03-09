@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "description": "All your video and podcast bookmarks in one place. Support for YouTube, Spotify, YouTube Music, Dzen, VKVideo... Add your platform, contact the developer...",
   "default_locale": "en",
-  "permissions": ["storage", "tabs", "scripting"],
+  "permissions": ["storage", "tabs", "scripting", "notifications"],
   "host_permissions": [
     "https://open.spotify.com/*",
     "https://*.youtube.com/*",

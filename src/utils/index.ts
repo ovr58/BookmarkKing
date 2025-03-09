@@ -12,6 +12,7 @@ import {
     onDelete,
     onUpdate,
     getTimestamp,
+    showConfirmationNotification,
     type VideoElementInfo,
     type ActiveTab,
 } from "./utils";
@@ -30,6 +31,7 @@ export {
     onDelete,
     onUpdate,
     getTimestamp,
+    showConfirmationNotification,
     VideoElementInfo,
     ActiveTab,
 }

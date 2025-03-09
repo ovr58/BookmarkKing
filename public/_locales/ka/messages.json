@@ -56,6 +56,9 @@
     "confirmDelete": {
       "message": "წაშლის დადასტურება"
     },
+    "cancelDelete": {
+      "message": "წაშლის გაუქმება"
+    },
     "bookmarkTitle": {
       "message": "სანიშნის სათაური"
     },
@@ -103,5 +106,26 @@
     },
     "expandToggle": {
       "message": "გაფართოება/დაშლა"
+    },
+    "discardChanges": {
+      "message": "შეცვლებების გაუქმება"
+    },
+    "saveChanges": {
+      "message": "შეცვლებების შენახვა"
+    },
+    "timedisc": {
+      "message": "დროის გაზრდვა"
+    },
+    "timeasc": {
+      "message": "დროის კლება"
+    },
+    "color": {
+      "message": "ფერის მიხედვით"
+    },
+    "deleteSelectedBookmarks": {
+      "message": "მონიშნული სანიშნეების წაშლა?"
+    },
+    "toggleTheme": {
+      "message": "თემის გადართვა"
     }
   }

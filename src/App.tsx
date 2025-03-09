@@ -5,20 +5,26 @@ import {
   openVideo,
 } from './utils'
 import { useEffect } from 'react'
-import useChromeApi from './context/useChromeApi';
+import useChromeApi from './hooks/useChromeApi';
 import BookmarksContainer from './components/BookmarksContainer';
-
+import ThemeToggle from './components/ThemeToggle';
+import useTheme from './hooks/useTheme';
 
 function App() {
 
   const { curTab, curSession, curVideosWithBookmarks, allowedUrls } = useChromeApi()
 
+  const curTheme = useTheme()
+
   useEffect(() => {
+
+    document.body.setAttribute('data-mode', curTheme)
+
     localizeContent()
   }
-  , [])
+  , [curTheme])
 
-  const handleVideoChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleVideoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.preventDefault();
     e.stopPropagation();
     const video = JSON.parse(e.target.value)
@@ -27,13 +33,14 @@ function App() {
 
   return (
     <>
-      <div id="extensionName" className="title">
-        <span data-i18n="extensionName"></span>
+      <div id="extensionName" className="flex justify-between items-center p-4">
+        <span data-i18n="extensionName" className='text-dark dark:text-light'></span>
+        <ThemeToggle />
       </div>
       <div id="container" className="container">
           <div>
               <div id="videos" className="videoslist">
-                <span className="title" data-i18n="videosSelectTitle"></span>
+                <span className="font-bold text-[14px] p-2 text-dark dark:text-light" data-i18n="videosSelectTitle"></span>
                 <select
                  id="dropdown" 
                  className="videosSelect" 
@@ -74,22 +81,22 @@ function App() {
                   })}
                 </select>
               </div>
-            <div id="listTitle" className="title">
+            <div id="listTitle" className="font-bold text-[14px] p-2 text-dark dark:text-light">
               {allowedUrls.some(element => curTab.url.includes(element)) ?
                 `${chrome.i18n.getMessage('extentionTitle')}` :
                 
                 `${chrome.i18n.getMessage('extensionDescription')}`
               }
             </div>
-            <div className="bookmarks" id="bookmarks">
+            <div className="block" id="bookmarks">
               {curVideosWithBookmarks[curSession] && curVideosWithBookmarks[curSession].length > 0 ? 
                 <BookmarksContainer 
                   curSessionVideo={curVideosWithBookmarks[curSession]} 
                   curTab={curTab}
                 />
                 :
-                <div className="bookmark">
-                  <div className="bookmarkTitle">
+                <div className="flex justify-center items-center w-full h-full">
+                  <div className="font-normal italic text-[12px] p-2 text-dark dark:text-light">
                     {
                       (() => {
                         try {

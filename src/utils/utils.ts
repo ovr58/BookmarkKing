@@ -84,8 +84,10 @@ export function fetchVideosWithBookmarks() {
             console.log('POPUP - Fetch Videos:', obj);
             const videos: { [key: string]: VideoElementInfo[] } = {};
             Object.keys(obj).forEach(key => {
-                const video: VideoElementInfo[] = JSON.parse(obj[key]);
-                videos[key] = video;
+                if (key !== "curTheme") {
+                    const video: VideoElementInfo[] = JSON.parse(obj[key]);
+                    videos[key] = video;
+                }
             });
             resolve(videos);
         });
@@ -157,7 +159,7 @@ export async function checkIfTabHasVideoElement(activeTab: ActiveTab): Promise<V
                         time: 0,
                         title: 'Start',
                         bookMarkCaption: 'Start of the video',
-                        color: '#FF5733'
+                        color: 'bg-red-600',
                     }
                 });
         }
@@ -230,3 +232,51 @@ export async function onUpdate(tab: ActiveTab, bookmarks: VideoElementInfo[]): P
         });
     }
 }
+
+interface NotificationButton {
+    title: string;
+}
+
+interface NotificationOptions {
+    type: 'basic';
+    iconUrl: string;
+    title: string;
+    message: string;
+    buttons: NotificationButton[];
+    requireInteraction: boolean;
+    priority: number;
+}
+
+type NotificationCallback = () => void;
+
+export const showConfirmationNotification = (
+    onConfirm: NotificationCallback
+): void => {
+    const notificationId = 'confirm-notification';
+
+    const options: NotificationOptions = {
+        type: 'basic',
+        iconUrl: 'assets/delete64x64.png',
+        title: chrome.i18n.getMessage('confirmDelete'),
+        message: chrome.i18n.getMessage('deleteSelectedBookmarks'),
+        buttons: [
+            { title: chrome.i18n.getMessage('confirmDelete') },
+            { title: chrome.i18n.getMessage('cancelDelete') }
+        ],
+        requireInteraction: true,
+        priority: 2
+    };
+
+    chrome.notifications.create(notificationId, options);
+    console.log('POPUP - Show Confirmation Notification:', notificationId);
+    chrome.notifications.onButtonClicked.addListener((notifId, btnIdx) => {
+        if (notifId === notificationId) {
+            if (btnIdx === 0) {
+                onConfirm();
+            } else if (btnIdx === 1) {
+                return;
+            }
+            chrome.notifications.clear(notificationId);
+        }
+    });
+};

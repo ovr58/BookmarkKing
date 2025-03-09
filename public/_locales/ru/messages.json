@@ -56,6 +56,9 @@
     "confirmDelete": {
       "message": "Подтвердить удаление"
     },
+    "cancelDelete": {
+      "message": "Отменить удаление"
+    },
     "bookmarkTitle": {
       "message": "Название закладки"
     },
@@ -103,5 +106,26 @@
     },
     "expandToggle": {
       "message": "Развернуть/свернуть"
+    },
+    "discardChanges": {
+      "message": "Отменить изменения"
+    },
+    "saveChanges": {
+      "message": "Сохранить изменения"
+    },
+    "timedisc": {
+      "message": "Увеличение времени"
+    },
+    "timeasc": {
+      "message": "Уменьшение времени"
+    },
+    "color": {
+      "message": "По цвету"
+    },
+    "deleteSelectedBookmarks": {
+      "message": "Удалить выбранные закладки?"
+    },
+    "toggleTheme": {
+      "message": "Переключить тему"
     }
   }

@@ -59,6 +59,9 @@
     "confirmDelete": {
       "message": "Confirm Delete"
     },
+    "cancelDelete": {
+      "message": "Cancel Delete"
+    },
     "bookmarkTitle": {
       "message": "Bookmark Title"
     },
@@ -106,5 +109,27 @@
     },
     "expandToggle": {
       "message": "Expand / Collapse"
+    },
+    "discardChanges": {
+      "message": "Discard changes"
+    },
+    "saveChanges": {
+      "message": "Save changes"
+    },
+    "timedisc": {
+      "message": "Decrease time"
+    },
+    "timeasc": {
+      "message": "Increase time"
+    },
+    "color": {
+      "message": "By color"
+    },
+    "deleteSelectedBookmarks": {
+      "message": "Delete selected bookmarks?"
+    },
+    "toggleTheme": {
+      "message": "Toggle theme"
     }
+    
   }

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ChromeContext } from "./ChromApiContext";
+import { ChromeContext } from "../context/ChromApiContext";
 
 const useChromeApi = () => {
     const context = useContext(ChromeContext);

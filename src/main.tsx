@@ -4,7 +4,11 @@ import App from './App.tsx'
 import { ChromeProvider } from './context/ChromApiContext.tsx'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const $root = document.getElementById('root')!
+
+$root.className = 'bg-light dark:bg-dark'
+
+ReactDOM.createRoot($root).render(
   <React.StrictMode>
     <ChromeProvider>
       <App />

@@ -58,7 +58,8 @@ const getUrlParams = async (url) => {
             console.log("From background on updated - urlParams:", urlParams);
             urlParams !== '' && chrome.tabs.sendMessage(tabId, {
                 type: 'NEW',
-                videoId: urlParams
+                videoId: urlParams,
+                url: tab.url
             }, () => {
                 if (chrome.runtime.lastError) {
                     console.log("From background - Error sending message:", chrome.runtime.lastError);
@@ -86,7 +87,8 @@ const getUrlParams = async (url) => {
                             console.log("From background - sending message on activated:");
                             chrome.tabs.sendMessage(activeInfo.tabId, {
                                 type: 'NEW',
-                                videoId: urlParams
+                                videoId: urlParams,
+                                url: tab.url
                             }, () => {
                                 if (chrome.runtime.lastError) {
                                     console.log("From background - Error sending message:", chrome.runtime.lastError);
@@ -101,7 +103,8 @@ const getUrlParams = async (url) => {
                 });
                 chrome.tabs.sendMessage(activeInfo.tabId, {
                     type: 'NEW',
-                    videoId: urlParams
+                    videoId: urlParams,
+                    url: tab.url
                 }, () => {
                     if (chrome.runtime.lastError) {
                         console.log("From background - Error sending message:", chrome.runtime.lastError);
@@ -131,7 +134,7 @@ const getUrlParams = async (url) => {
         const handleElementFound = async () => {
             const urlParams = await getUrlParams(sender.tab.url)
             console.log("From background - Element found, sending 'NEW' message again");
-            chrome.tabs.sendMessage(sender.tab.id, { type: 'NEW', videoId: urlParams }, (response) => {
+            chrome.tabs.sendMessage(sender.tab.id, { type: 'NEW', videoId: urlParams, url: sender.tab.url }, (response) => {
                 if (chrome.runtime.lastError) {
                     console.log("From background - Error sending message:", chrome.runtime.lastError);
                 } else {

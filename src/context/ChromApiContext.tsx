@@ -23,7 +23,7 @@ export const ChromeContext = createContext<ChromeContextProps | undefined>(undef
 export const ChromeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     
     const allowedUrls = useMemo(() => getAllowedUrls(), [])
-    
+
     const [curVideosWithBookmarks, setcurVideosWithBookmarks] = useState<{ [key: string]: VideoElementInfo[] | [] }>({ ['unavailable']: [] })
   
     const [curSession, setcurSession] = useState('')

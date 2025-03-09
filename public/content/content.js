@@ -244,7 +244,7 @@ const contentFunc = () => {
             time: currentTime,
             title: currVideoTitle,
             bookMarkCaption: currVideoTitle,
-            color: '#FF5733'
+            color: 'bg-red-600'
         }
         
         chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
@@ -369,6 +369,7 @@ const contentFunc = () => {
                     })
                 } else if (type === 'UPDATE') {
                     const valueArray = JSON.parse(value)
+                    console.log('Update bookmarks:', valueArray)
                     valueArray.forEach((element) => {
                         currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
                             if (bookmark.time === element.time) {

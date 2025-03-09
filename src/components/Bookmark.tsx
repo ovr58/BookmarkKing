@@ -107,9 +107,13 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
     return (
     <div className="px-1 py-1 relative z-auto" key={bookmark.time}>
         <div className="flex items-start z-20 relative">
-            <div className="flex-grow truncate" onClick={(e) => handleBookmarkOpen(e, bookmark)}>
-                <div className="w-full cursor-pointer select-none justify-between items-center mb-3" key="time-and-title">
-                    <h2 className="text-md leading-snug font-extrabold text-gray-50 truncate mb-1">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
+            <div 
+                className="flex-grow truncate" 
+                onClick={(e) => handleBookmarkOpen(e, bookmark)}
+                title={chrome.i18n.getMessage('expandToggle')}
+            >
+                <div className="w-full cursor-pointer select-none justify-between items-center mb-3 pl-2" key="time-and-title">
+                    <h2 className="text-md leading-snug font-extrabold text-componentDark dark:text-component truncate mb-1">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
                 </div>
                 <motion.div
                     key="caption-motion"
@@ -118,10 +122,10 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
                     transition={{ duration: 0.3 }}
                 >
                 <div ref={collapsedRef} className="flex items-end justify-between whitespace-normal w-full h-auto pl-[12px] pr-[3px] gap-1" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                    <div className="relative text-indigo-100 w-full" style={{ height: isExpanded ? expandedHeight : '48px', alignContent: 'center'}} key="caption-container">
+                    <div className="relative text-componentDark dark:text-component w-full" style={{ height: isExpanded ? expandedHeight : '48px', alignContent: 'center'}} key="caption-container">
                         {isInputActive ? 
                         <textarea 
-                            className="bg-indigo-600 text-indigo-100 w-full h-full border-0 outline-none overflow-y-auto rounded-lg focus:ring-2 focus:border-2 focus:border-b-blue-800 focus:rounded-md whitespace-normal resize-none custom-scrollbar" 
+                            className="bg-primary dark:bg-primaryDark text-componentDark dark:text-component w-full h-full border-0 outline-none overflow-y-auto rounded-lg focus:ring-2 focus:border-2 focus:border-dark dark:focus:border-light focus:rounded-md whitespace-normal resize-none custom-scrollbar" 
                             value={caption} 
                             onChange={(e) => handleCaptionChange(e)}
                             onMouseDown={(e) => e.stopPropagation()}
@@ -131,50 +135,58 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
                             autoFocus
                         />
                         :
-                        <span className='break-words' onClick={(e) => (e.stopPropagation(), setIsInputActive(true))}>
+                        <span 
+                            className='break-words' 
+                            onClick={(e) => (e.stopPropagation(), setIsInputActive(true))}
+                            title={chrome.i18n.getMessage('editBookmark')}
+                        >
                             {bookmark.bookMarkCaption}
                         </span>}
                         {!isInputActive ?
                         <>
                         <motion.div 
-                            className="absolute top-0 -right-4 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="expand bookmark"
+                            className="absolute top-0 -right-4 bg-primary dark:bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-dark dark:border-light hover:animate-pulse transform hover:scale-105 hover:border-b-blue-900 dark:hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="expand bookmark"
                             onClick={(e) => handleExpand(e)}
                             animate={{ rotate: isExpanded ? 180 : 0 }}
                             transition={{ duration: 0.3 }}
                             key="expand-button-motion"
+                            title={chrome.i18n.getMessage('expandToggle')}
                         >
-                            <MdExpandMore className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="expand bookmark" />
+                            <MdExpandMore className="w-[14px] h-auto object-fit rounded-full dark:fill-light fill-dark" aria-label="expand bookmark" />
                         </motion.div>
                         <div 
-                        className={`absolute top-0 -right-9 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out`}
-                        aria-label="edit bookmark"
-                        onClick={(e) => (
-                            e.stopPropagation(),
-                            setIsInputActive(true)
-                        )}
-                        key="edit-button"
+                            className={`absolute top-0 -right-9 bg-primary dark:bg-blue-900 border-dark dark:border-light hover:animate-pulse transform hover:scale-105 hover:border-b-blue-900 dark:hover:border-b-blue-300 rounded-full place-items-center flex flex-auto leading-normal border-2 cursor-pointer transition-all duration-150 ease-in-out`}
+                            aria-label="edit bookmark"
+                            onClick={(e) => (
+                                e.stopPropagation(),
+                                setIsInputActive(true)
+                            )}
+                            key="edit-button"
+                            title={chrome.i18n.getMessage('editBookmark')}
                         >
-                            <MdEdit className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="edit bookmark" />
+                            <MdEdit className="w-[14px] h-auto object-fit rounded-full dark:fill-light fill-dark" aria-label="edit bookmark" />
                         </div>
                         </>
                         :
                         <>
                         <div 
-                            className="absolute top-0 -right-9 z-50 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="discard changes bookmark"
+                            className="absolute top-0 -right-9 z-50 bg-primary dark:bg-blue-900 border-dark dark:border-light hover:animate-pulse transform hover:scale-105 hover:border-b-blue-900 dark:hover:border-b-blue-300 rounded-full place-items-center flex flex-auto leading-normal border-2 cursor-pointer transition-all duration-150 ease-in-out" aria-label="discard changes bookmark"
                             onClick={(e) => (
                                 e.stopPropagation(),
                                 setIsInputActive(false)
                             )}
                             key="discard-button"
+                            title={chrome.i18n.getMessage('discardChanges')}
                         >
-                            <MdEditOff className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="discard changes bookmark" />
+                            <MdEditOff className="w-[14px] h-auto object-fit rounded-full dark:fill-light fill-dark" aria-label="discard changes bookmark" />
                         </div>
                         <div 
-                            className="absolute top-0 -right-4 z-50 bg-blue-900 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-b-blue-300 cursor-pointer transition-all duration-150 ease-in-out" aria-label="save bookmark"
+                            className="absolute top-0 -right-4 z-50 bg-primary dark:bg-blue-900 border-dark dark:border-light hover:animate-pulse transform hover:scale-105 hover:border-b-blue-900 dark:hover:border-b-blue-300 rounded-full place-items-center flex flex-auto leading-normal border-2 cursor-pointer transition-all duration-150 ease-in-out" aria-label="save bookmark"
                             onClick={(e) => handleClick(e, bookmark)}
                             key="save-button"
+                            title={chrome.i18n.getMessage('saveChanges')}
                         >
-                            <MdSave className="w-[14px] h-auto object-fit rounded-full fill-white" aria-label="save bookmark"/>
+                            <MdSave className="w-[14px] h-auto object-fit rounded-full dark:fill-light fill-dark" aria-label="save bookmark"/>
                         </div>
                         </>
                         }
@@ -185,19 +197,20 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
                     >
                     </div>
                     <div 
-                        className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 border-white hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out" aria-label="play from bookmark"
+                        className="bg-red-600 rounded-full place-items-center flex flex-auto leading-normal border-2 dark:border-light border-dark hover:animate-pulse transform hover:scale-105 hover:border-red-500 cursor-pointer transition-all duration-150 ease-in-out" aria-label="play from bookmark"
                         onClick={(e) => handleBookmarkPLay(e, bookmark)}
                         key="play-button"
+                        title={chrome.i18n.getMessage('playBookmark')}
                     >
-                        <HiPlayPause className="w-[24px] h-auto object-fit rounded-full fill-white" aria-label="play from bookmark" />
+                        <HiPlayPause className="w-[24px] h-auto object-fit rounded-full fill-light" aria-label="play from bookmark" />
                     </div>
                 </div>
                 </motion.div>
             </div>
         </div>
-        <div className={`absolute left-0 top-0 content-center z-10 items-center ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[100%] bg-[${bookmark.color}] rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
+        <div className={`absolute left-0 top-0 content-center z-30 items-center ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[100%] ${bookmark.color} rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
             {bookmarkState[bookmark.time.toString()].isSelected ? 
-                <GrRadialSelected className='stroke-white w-full h-auto my-auto z-0' /> : ''
+                <GrRadialSelected className='dark:stroke-light stroke-dark w-full h-auto my-auto z-0' /> : ''
             }
         </div>
     </div>

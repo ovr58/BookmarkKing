@@ -303,7 +303,7 @@ const contentFunc = () => {
             time: currentTime,
             title: currVideoTitle,
             bookMarkCaption: currVideoTitle,
-            color: '#007BFF'
+            color: 'bg-blue-600'
         }
 
         await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
