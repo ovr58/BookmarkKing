@@ -32,7 +32,7 @@ const contentFunc = () => {
                 resolve()
                 return
             }
-            const observer = new MutationObserver((mutations, observer) => {
+            const observer = new MutationObserver((_mutations, observer) => {
                 const containerToAdd = document.getElementById(containerToAddId);
                 if (containerToAdd) {
                     observer.disconnect();
@@ -225,7 +225,7 @@ const contentFunc = () => {
 
     const checkIfExists = (bookmarks, newBookmarkTime) => {
         return new Promise((resolve) => {
-            for (element of bookmarks) {
+            for (let element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
                 const upLimit = element.time + 10 > vkPlayer.duration ? vkPlayer.duration : element.time + 10
                 const lowLimit = element.time - 10 < 0 ? 0 : element.time - 10
@@ -266,10 +266,7 @@ const contentFunc = () => {
         const bookmarks = await fetchBookmarks(currentVideoId)
         console.log('Fetch called from newVideoLoaded', fromMessage, newVideoLoadedCalled)
         newVideoLoadedCalled === 1 && addBookmarkButton(fromMessage)
-        // clearBookmarksOnProgressBar() 
-        // if (bookmarks.length > 0) {
-            addBookmarksOnProgressBar(bookmarks)
-        // }
+        addBookmarksOnProgressBar(bookmarks)
         addResizeObserver()
         newVideoLoadedCalled--
     }
@@ -292,10 +289,6 @@ const contentFunc = () => {
         const exists = await checkIfExists(currentVideoBookmarks, currentTime)
         if (exists) return
 
-        await chrome.storage.local.set({ taskStatus: true }, () => {
-            console.log('Task status set to started');
-        });
-        chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
         const currVideoTitle = document.title.replace(/^\(\d+\)\s*/, '').trim()
         const newBookmark = {
             id: currentVideoId,
@@ -306,14 +299,10 @@ const contentFunc = () => {
             color: 'bg-blue-600'
         }
 
-        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
+        chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded()
             console.log('Bookmark added from vkcontent.js:', newBookmark)
         })
-        await chrome.storage.local.set({ taskStatus: false }, () => {
-            console.log('Task status set to completed');
-        });
-        chrome.runtime.sendMessage({ type: "STOP_CREATING_BOOKMARK"})
     }
 
     const vkcontentMessageListener = (obj) => {
@@ -335,7 +324,7 @@ const contentFunc = () => {
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
                     const handleNewVideoLoaded = async () => {
-                        await chrome.storage.local.set({ taskStatus: false }, async () => {
+                        chrome.storage.local.set({ taskStatus: false }, async () => {
                             await newVideoLoaded('NEW')
                             console.log('Task status set to false');
                         });
@@ -351,7 +340,7 @@ const contentFunc = () => {
                     console.log('Delete bookmarks:', value, currentVideoBookmarks)
                     currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
                     const handleDeleteBookmark = async () => {
-                        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('DELETE')
                             console.log('Bookmark deleted:', value, currentVideoBookmarks)
                         })
@@ -372,7 +361,11 @@ const contentFunc = () => {
                         })
                     })
                     const handleUpdateBookmark = async () => {
-                        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
+                        if (valueArray.length === 0) {
+                            await bookmarkClickEventHandler()
+                            return
+                        }
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('UPATE')
                             console.log('Bookmark updated:', value, currentVideoBookmarks)
                         })

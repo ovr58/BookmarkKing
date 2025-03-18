@@ -1,36 +1,52 @@
-import React from "react";
+import React, { useMemo } from "react";
 import SelectAllButton from "./SelectAllButton";
 import ExpandCollapseButton from "./ExpandCollapseButton";
 import DeleteSelectionButton from "./DeleteSelectionButton";
 import SortButton from "./SortButton";
 import ColorButton from "./ColorButton";
 import { AnimatePresence, motion } from "framer-motion";
+import AddBookmarkButton from "./AddBookmarkButton";
 
 interface UiContainerProps {
     bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean, color: string} };
-    setBookmarkState: React.Dispatch<React.SetStateAction<{ [key: string]: {isOpen: boolean, isSelected: boolean, color: string} }>>;
+    handleSellectByCommand: (commandKey: string) => void;
+    handleExpandByCommand: (commandKey: string) => void;
     handleDelete: () => void;
     handleColorChange: (color: string) => void;
-    setSortType: React.Dispatch<React.SetStateAction<'color' | 'timedisc' | 'timeasc'>>;
+    handleAddBookmark: () => void;
+    sortedOrder: boolean[];
+    setSortType: React.Dispatch<React.SetStateAction<boolean[]>>;
 }
 
 const UiContainer: React.FC<UiContainerProps> = ({
     bookmarkState,
-    setBookmarkState,
+    handleSellectByCommand,
+    handleExpandByCommand,
     handleDelete,
     handleColorChange,
+    handleAddBookmark,
+    sortedOrder,
     setSortType
 }) => {
 
-    const [nextSortType, setNextSortType] = React.useState('timedisc');
-    const isAnySelected = Object.keys(bookmarkState).some((key: string) => bookmarkState[key].isSelected);
-    const firstSelectedColor = isAnySelected ? bookmarkState[Object.keys(bookmarkState).find((key: string) => bookmarkState[key].isSelected)!].color : 'bg-red-600';
-    const isAllExpanded = Object.keys(bookmarkState).every((key: string) => bookmarkState[key].isOpen);
-    console.log('UI CONTAINER:', bookmarkState)
+    const isAllExpanded = useMemo(() => Object.keys(bookmarkState).every((key: string) => bookmarkState[key].isOpen), [bookmarkState]);
+
+    const isAnyExpanded = useMemo(() => Object.keys(bookmarkState).some((key: string) => bookmarkState[key].isOpen), [bookmarkState]);
+
+    const isAnySelected = useMemo(() => Object.keys(bookmarkState).some((key: string) => bookmarkState[key].isSelected), [bookmarkState]);
+
+    const isAllSelected = useMemo(() => Object.keys(bookmarkState).every((key: string) => bookmarkState[key].isSelected), [bookmarkState]);
+
+    const colorsInUse = useMemo(() =>
+        // get all unic colors in use
+        Array.from(new Set(
+            Object.keys(bookmarkState).map((key: string) => bookmarkState[key].color)
+        )), [bookmarkState]
+    );
 
     return (
-        <div className="flex flex-row justify-start items-start gap-[5px] p-2 w-full h-auto mb-2 max-w-2xl mx-auto rounded-lg overflow-hidden transform transition-all duration-150 ease-in-out">
-        <AnimatePresence>
+        <div className="relative z-50 flex flex-row justify-start items-start gap-[5px] p-2 w-full h-auto mb-2 max-w-2xl mx-auto rounded-lg transform transition-all duration-150 ease-in-out overflow-visible">
+        <AnimatePresence key='select-expand-collapse-sort-animate-presence'>
         <motion.div
             className="flex gap-[5px]"
             initial={{ scale: 0.2 }}
@@ -39,33 +55,21 @@ const UiContainer: React.FC<UiContainerProps> = ({
             transition={{ duration: 0.2 }}
             key='select-expand-collapse-sort-motion'
         >
-            <SelectAllButton onClick = {(() => {
-                const newBookmarkState = {...bookmarkState};
-                Object.keys(newBookmarkState).forEach((key: string) => {
-                    newBookmarkState[key].isSelected = !newBookmarkState[key].isSelected;
-                });
-                setBookmarkState(newBookmarkState);
-            })} />
-            <ExpandCollapseButton onClick = {(() => {
-                const newBookmarkState = {...bookmarkState};
-                Object.keys(newBookmarkState).forEach((key: string) => {
-                    newBookmarkState[key].isOpen = !newBookmarkState[key].isOpen;
-                });
-                setBookmarkState(newBookmarkState);
-            })} isAllExpanded={isAllExpanded}/>
-            <SortButton onClick={(() => {
-                setSortType((sortType) => {
-                    if (sortType === 'timeasc') {
-                        setNextSortType('color');
-                        return 'timedisc';
-                    } else if (sortType === 'timedisc') {
-                        setNextSortType('timeasc');
-                        return 'color';
-                    }
-                    setNextSortType('timedisc');
-                    return 'timeasc';
-                })
-            })} nextSortType={nextSortType}/>
+            <AddBookmarkButton onClick={handleAddBookmark} />
+            <SelectAllButton 
+                onClick = {handleSellectByCommand}
+                isAnySelected={isAnySelected}
+                isAllSelected={isAllSelected}
+                colorsInUse={colorsInUse}                    
+            />
+            <ExpandCollapseButton 
+                onClick = {handleExpandByCommand}
+                isAnySelected={isAnySelected}
+                isAllExpanded={isAllExpanded}
+                isAnyExpanded={isAnyExpanded}
+                colorsInUse={colorsInUse}    
+            />
+            <SortButton onClick={setSortType} sortedOrder={sortedOrder}/>
         </motion.div>
         {isAnySelected &&
         <motion.div
@@ -78,10 +82,11 @@ const UiContainer: React.FC<UiContainerProps> = ({
         >
             <DeleteSelectionButton onClick={handleDelete}/>
 
-            <ColorButton handleColorChange={(color) => handleColorChange(color)} firstSelectedColor={firstSelectedColor} />
+            <ColorButton handleColorChange={(color) => handleColorChange(color)} />
         </motion.div>
         }
         </AnimatePresence>
+        
         </div>
     );
 }

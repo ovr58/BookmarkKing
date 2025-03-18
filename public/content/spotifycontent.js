@@ -78,11 +78,9 @@ const contentFunc = () => {
     const setPlaybackPosition = async (positionPercentage, progressBar) => {
         const rangeInput = progressBar.querySelector('input[type="range"]');
         if (rangeInput) {
-            // Установите новое значение для input
             const newValue = parseFloat(rangeInput.max) * positionPercentage / 100;
             rangeInput.value = newValue.toFixed(0);
             console.log('Range input value set:', newValue, rangeInput.value, positionPercentage);
-            // Создайте и инициируйте события input и change
             const inputEvent = new Event('input', { bubbles: true, value: newValue.toFixed(0) });
             const changeEvent = new Event('change', { bubbles: true, value: newValue.toFixed(0) });
             rangeInput.dispatchEvent(inputEvent);
@@ -105,7 +103,7 @@ const contentFunc = () => {
                 resolve()
                 return
             }
-            const observer = new MutationObserver((mutations, observer) => {
+            const observer = new MutationObserver((_mutations, observer) => {
                 const containerToAdd = document.getElementById(containerToAddId);
                 if (containerToAdd) {
                     observer.disconnect();
@@ -305,7 +303,7 @@ const contentFunc = () => {
 
     const checkIfExists = (bookmarks, newBookmarkTime, buttonClass) => {
         return new Promise((resolve) => {
-            for (element of bookmarks) {
+            for (let element of bookmarks) {
                 const time = element.time
                 const newTime = newBookmarkTime
                 console.log('FROM IS EXISTS: ', element.time, time, newBookmarkTime)
@@ -405,10 +403,7 @@ const contentFunc = () => {
         console.log('Sotify player:', spotifyPlayer.duration)
 
         newAudioLoadedExecutedTimes === 1 && addBookmarkButton()
-        // clearBookmarksOnProgressBar() 
-        // if (bookmarks.length > 0) {
-            addBookmarksOnProgressBar(bookmarks)
-        // }
+        addBookmarksOnProgressBar(bookmarks)
         addResizeObserver()
         newAudioLoadedExecutedTimes--
     }
@@ -431,11 +426,6 @@ const contentFunc = () => {
         const exists = await checkIfExists(currentVideoBookmarks, currentTime, buttonClass)
         if (exists) return
 
-        await chrome.storage.local.set({ taskStatus: true }, () => {
-            console.log('Task status set to started');
-        });
-        chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
-        
         const currAudioTitle = spotifyPlayer.title
         const newBookmark = {
             id: currentVideoId,
@@ -446,14 +436,10 @@ const contentFunc = () => {
             color: 'bg-green-600'
         }
 
-        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
+        chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded()
             console.log('Bookmark added from dzencontent.js:', newBookmark)
         })
-        await chrome.storage.local.set({ taskStatus: false }, () => {
-            console.log('Task status set to completed');
-        });
-        chrome.runtime.sendMessage({ type: "STOP_CREATING_BOOKMARK"})
     }
 
 
@@ -472,7 +458,7 @@ const contentFunc = () => {
             }
             currentVideoId = idElement
             if (currentVideoId === '') {
-                const observer = new MutationObserver((mutations, observer) => {
+                const observer = new MutationObserver((_mutations, observer) => {
                     const idElement = document.querySelectorAll('a[data-testid="context-item-link"]')[0]
                     console.log('Mutation observer:', idElement)
                     if (checkForElement(idElement)) {
@@ -501,7 +487,7 @@ const contentFunc = () => {
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
                     const handleNewVideoLoaded = async () => {
-                        await chrome.storage.local.set({ taskStatus: false }, async () => {
+                        chrome.storage.local.set({ taskStatus: false }, async () => {
                             await newVideoLoaded('NEW')
                             console.log('Task status set to false');
                         });
@@ -518,7 +504,7 @@ const contentFunc = () => {
                     console.log('Delete bookmarks:', value, currentVideoBookmarks)
                     currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
                     const handleDeleteBookmark = async () => {
-                        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('DELETE')
                             console.log('Bookmark deleted:', value, currentVideoBookmarks)
                         })
@@ -539,7 +525,11 @@ const contentFunc = () => {
                         })
                     })
                     const handleUpdateBookmark = async () => {
-                        await chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
+                        if (valueArray.length === 0) {
+                            await bookmarkClickEventHandler()
+                            return
+                        }
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('UPATE')
                             console.log('Bookmark updated:', value, currentVideoBookmarks)
                         })

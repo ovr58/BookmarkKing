@@ -113,19 +113,61 @@
     "saveChanges": {
       "message": "Сохранить изменения"
     },
-    "timedisc": {
-      "message": "Увеличение времени"
-    },
-    "timeasc": {
-      "message": "Уменьшение времени"
-    },
-    "color": {
-      "message": "По цвету"
-    },
     "deleteSelectedBookmarks": {
       "message": "Удалить выбранные закладки?"
     },
     "toggleTheme": {
       "message": "Переключить тему"
+    },
+    "truefalsefalsefalse": {
+      "message": "Увеличение времени"
+    },
+    "falsetruefalsefalse": {
+      "message": "Уменьшение времени"
+    },
+    "falsefalsetruefalse": {
+      "message": "По цвету (A-Z)"
+    },
+    "falsefalsefalsetrue": {
+      "message": "По цвету (Z-A)"
+    },
+    "truefalsefalsetrue": {
+      "message": "По цвету (Z-A)/время ум."
+    },
+    "truefalsetruefalse": {
+      "message": "По цвету (A-Z)/время ув."
+    },
+    "falsetruetruefalse": {
+      "message": "По цвету (A-Z)/время ув."
+    },
+    "falsetruefalsetrue": {
+      "message": "По цвету (Z-A)/время ум."
+    },
+    "selectAll": {
+      "message": "Выбрать все"
+    },
+    "deselectAll": {
+      "message": "Снять выделение"
+    },
+    "invertSelection": {
+      "message": "Инвертировать выделение"
+    },
+    "selectSameColor": {
+      "message": "Выбрать цвет"
+    },
+    "expandAll": {
+    "message": "Развернуть все"
+    },
+    "collapseAll": {
+      "message": "Свернуть все"
+    },
+    "inverseExpand": {
+      "message": "Обратить Развернуть/Свернуть"
+    },
+    "expandSameColor": {
+      "message": "Цвет Развернуть/Свернуть"
+    },
+    "expandSelected": {
+      "message": "Развернуть/свернуть выбранные"
     }
   }

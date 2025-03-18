@@ -113,19 +113,61 @@
     "saveChanges": {
       "message": "შეცვლებების შენახვა"
     },
-    "timedisc": {
-      "message": "დროის გაზრდვა"
-    },
-    "timeasc": {
-      "message": "დროის კლება"
-    },
-    "color": {
-      "message": "ფერის მიხედვით"
-    },
     "deleteSelectedBookmarks": {
       "message": "მონიშნული სანიშნეების წაშლა?"
     },
     "toggleTheme": {
       "message": "თემის გადართვა"
+    },
+    "truefalsefalsefalse": {
+      "message": "დროის გაზრდვა"
+    },
+    "falsetruefalsefalse": {
+      "message": "დროის კლება"
+    },
+    "falsefalsetruefalse": {
+      "message": "ფერის მიხედვით (A-Z)"
+    },
+    "falsefalsefalsetrue": {
+      "message": "ფერის მიხედვით (Z-A)"
+    },
+    "truefalsefalsetrue": {
+      "message": "ფერის მიხედვით (Z-A)/დროის გაზრდვა"
+    },
+    "truefalsetruefalse": {
+      "message": "ფერის მიხედვით (A-Z)/დროის გაზრდვა"
+    },
+    "falsetruetruefalse": {
+      "message": "ფერის მიხედვით (A-Z)/დროის კლება"
+    },
+    "falsetruefalsetrue": {
+      "message": "ფერის მიხედვით (Z-A)/დროის კლება"
+    },
+    "selectAll": {
+      "message": "ყველას მონიშვნა"
+    },
+    "deselectAll": {
+      "message": "ყველას გამორიცხვა"
+    },
+    "invertSelection": {
+      "message": "შერჩევის გადაკეტვა"
+    },
+    "selectSameColor": {
+      "message": "ფერის არჩევა/გაუქმება"
+    },
+    "expandAll": {
+    "message": "ყველას გაფართოება"
+    },
+    "collapseAll": {
+      "message": "ყველას დაშლა"
+    },
+    "inverseExpand": {
+      "message": "შებრუნებული კოლაფსი/გაფართოება"
+    },
+    "expandSameColor": {
+      "message": "იგივე ფერი კოლაფსი/გაფართოება"
+    },
+    "expandSelected": {
+      "message": "მონიშნულის გაფართოება/დაშლა"
     }
   }

@@ -1,2 +1,9 @@
 import { ChromeProvider, ChromeContext, ChromeContextProps } from "./ChromApiContext";
-export { ChromeProvider, ChromeContext, type ChromeContextProps};
+import { MenuContextProps, MenuContext, MenuProvider } from "./ContextMenuContext";
+export { 
+    MenuProvider,
+    MenuContext,
+    ChromeProvider,
+    ChromeContext,
+    type MenuContextProps,
+    type ChromeContextProps};

@@ -106,6 +106,8 @@ export function getUrlParams(url: string, allowedUrls: string[]): string {
     } else if (url.includes('music.youtube')) {
         const queryParam = url.split('?')[1];
         urlParams = new URLSearchParams(queryParam).get('v') ?? '';
+    } else if (url.includes('linkedin.com/learning')) {
+        urlParams = url.split('/learning/')[1].split('?')[0];
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
         } else if (allowedUrls.length > 0 && allowedUrls.some((element: string) => url.includes(element)) && urlParams === '') {
@@ -209,7 +211,7 @@ export async function onDelete(tab: ActiveTab, bookmarks: VideoElementInfo[]): P
     }
 }
 
-export async function onUpdate(tab: ActiveTab, bookmarks: VideoElementInfo[]): Promise<void> {
+export async function onUpdate(tab: ActiveTab, bookmarks: VideoElementInfo[], id: string): Promise<void> {
     console.log('Update Bookmark')
     
     if (tab.id !== undefined) {
@@ -225,58 +227,10 @@ export async function onUpdate(tab: ActiveTab, bookmarks: VideoElementInfo[]): P
                             }
                         )
                 )),
-            videoId: bookmarks[0].id,
+            videoId: id,
         }, () => {
             console.log('POPUP - Bookmark Updated Callback Called')
             return Promise.resolve();
         });
     }
 }
-
-interface NotificationButton {
-    title: string;
-}
-
-interface NotificationOptions {
-    type: 'basic';
-    iconUrl: string;
-    title: string;
-    message: string;
-    buttons: NotificationButton[];
-    requireInteraction: boolean;
-    priority: number;
-}
-
-type NotificationCallback = () => void;
-
-export const showConfirmationNotification = (
-    onConfirm: NotificationCallback
-): void => {
-    const notificationId = 'confirm-notification';
-
-    const options: NotificationOptions = {
-        type: 'basic',
-        iconUrl: 'assets/delete64x64.png',
-        title: chrome.i18n.getMessage('confirmDelete'),
-        message: chrome.i18n.getMessage('deleteSelectedBookmarks'),
-        buttons: [
-            { title: chrome.i18n.getMessage('confirmDelete') },
-            { title: chrome.i18n.getMessage('cancelDelete') }
-        ],
-        requireInteraction: true,
-        priority: 2
-    };
-
-    chrome.notifications.create(notificationId, options);
-    console.log('POPUP - Show Confirmation Notification:', notificationId);
-    chrome.notifications.onButtonClicked.addListener((notifId, btnIdx) => {
-        if (notifId === notificationId) {
-            if (btnIdx === 0) {
-                onConfirm();
-            } else if (btnIdx === 1) {
-                return;
-            }
-            chrome.notifications.clear(notificationId);
-        }
-    });
-};

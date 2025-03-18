@@ -33,9 +33,11 @@ function App() {
 
   return (
     <>
-      <div id="extensionName" className="flex justify-between items-center p-4">
+      <div id="extensionName" className="flex justify-between items-center p-2">
         <span data-i18n="extensionName" className='text-dark dark:text-light'></span>
+        
         <ThemeToggle />
+        
       </div>
       <div id="container" className="container">
           <div>

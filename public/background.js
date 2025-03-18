@@ -1,10 +1,8 @@
 /* eslint-disable no-undef */
 
-let popupPort = null;
 let updateListener = false
 let activateListener = false
 let onMessageListener = false
-let portListerActive = false
 
 const fetchAllowedUrls = () => {
     return new Promise((resolve) => {
@@ -13,17 +11,6 @@ const fetchAllowedUrls = () => {
         })
     })
 }
-
-!portListerActive && chrome.runtime.onConnect.addListener((port) => {
-  if (port.name === 'popup') {
-    popupPort = port;
-
-    port.onDisconnect.addListener(() => {
-      popupPort = null;
-    });
-  }
-  portListerActive = true
-});
 
 const getUrlParams = async (url) => {
     let urlParams = '';
@@ -39,6 +26,8 @@ const getUrlParams = async (url) => {
     } else if (url.includes('music.youtube')) {
         const queryParam = url.split('?')[1];
         urlParams = new URLSearchParams(queryParam).get('v') ?? '';
+    } else if (url.includes('linkedin.com/learning')) {
+        urlParams = url.split('/learning/')[1].split('?')[0];
     } else if (url.includes('open.spotify.com')) {
         urlParams = 'spotify';
     } else if (allowedUrls && allowedUrls.includes(url)) {
@@ -122,15 +111,7 @@ const getUrlParams = async (url) => {
 
 !onMessageListener && chrome.runtime.onMessage.addListener((request, sender) => {
     onMessageListener = true
-    if (request.type === "CREATING_BOOKMARK") {
-        if (popupPort) {
-            popupPort.postMessage({ type: 'TASK_STARTED' });
-        }
-    } else if (request.type === "STOP_CREATING_BOOKMARK") {
-        if (popupPort) {
-            popupPort.postMessage({ type: 'TASK_COMPLETED' });
-        }
-    } else if (request.type === "ELEMENT_FOUND") {
+    if (request.type === "ELEMENT_FOUND") {
         const handleElementFound = async () => {
             const urlParams = await getUrlParams(sender.tab.url)
             console.log("From background - Element found, sending 'NEW' message again");

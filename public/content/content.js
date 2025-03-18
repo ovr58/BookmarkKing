@@ -1,4 +1,5 @@
-/* eslint-disable no-undef */
+// /* eslint-disable no-undef */
+/* global chrome */
 
 const getTime = (time) => {
     let date = new Date(null)
@@ -20,11 +21,65 @@ const errorHandler = (error, nativeMessage = '') => {
 
 const contentFunc = () => {
 
-    let youtubePlayer
+    const contentElementsQuerys = {
+        youtubePlayer: ['.video-stream'],
+        scruberElement: ['.ytp-right-controls'],
+        progressBarElement: ['#ytd-player .ytp-chrome-bottom .ytp-progress-bar', '.ytp-progress-bar', '.ytp-progress-bar-container']
+    }
+
+    const contentElements = {
+        youtubePlayer: document.querySelectorAll(contentElementsQuerys.youtubePlayer[0])[0],
+        scruberElement: document.querySelectorAll(contentElementsQuerys.scruberElement[0])[0],
+        progressBarElement: document.querySelectorAll(contentElementsQuerys.progressBarElement[0])[0]
+    }
+
     let currentVideoId = ""
     let previousAriaValueMax = 0
     let previousProgressBarWidth = 0
     let newVideoLoadedCalled = 0
+
+    const checkForElement = (element) => {
+        if (element) {
+            chrome.runtime.sendMessage({ type: 'ELEMENT_FOUND' });
+            return true;
+        }
+        return false;
+    };
+
+    const checkAllElements = () => {
+        console.log('Checking all elements:', contentElements)
+        for (const key in contentElementsQuerys) {
+            let foundNumber = 0
+            for (const element of contentElementsQuerys[key]) {
+                const elementToCheck = document.querySelectorAll(element)[0];
+                const isElementAttrSet = document.body.getAttribute(`is${key}Set`);
+                if (!elementToCheck && !isElementAttrSet) {
+                    const observer = new MutationObserver((_mutations, observer) => {
+                        const idElement = document.querySelectorAll(element)[0]
+                        console.log('Mutation observer:', idElement)
+                        if (checkForElement(idElement)) {
+                            if (!contentElements[key] || contentElements[key].offsetWidth === 0) {
+                                contentElements[key] = idElement
+                            }
+                            console.log('Element found:', idElement)
+                            observer.disconnect();
+                            document.body.setAttribute(`is${key}Set`, false);
+                        }
+                    });
+                
+                    observer.observe(document.body, { childList: true, subtree: true });
+                    document.body.setAttribute(`is${key}Set`, true);
+                } else if (elementToCheck && elementToCheck.offsetWidth !== 0) {
+                    if (!contentElements[key] || contentElements[key].offsetWidth === 0) {
+                        contentElements[key] = elementToCheck
+                        foundNumber++
+                    }
+                }
+            }
+            if (foundNumber === 0) throw new Error(`Elements not found: ${contentElements[key]}`);
+        }
+        return true
+    }
 
     const addContainer = (parentElement, containerToAddId) => {
         return new Promise((resolve) => {
@@ -32,7 +87,7 @@ const contentFunc = () => {
                 resolve()
                 return
             }
-            const observer = new MutationObserver((mutations, observer) => {
+            const observer = new MutationObserver((_mutations, observer) => {
                 const containerToAdd = document.getElementById(containerToAddId);
                 if (containerToAdd) {
                     observer.disconnect();
@@ -104,35 +159,26 @@ const contentFunc = () => {
         bookMarkBtn.style.opacity = '0.2'
         bookMarkBtn.style.transition = 'opacity 0.5s'
 
-        if (youtubePlayer) {
-            const scruberElement = document.getElementsByClassName('ytp-right-controls')[0]
-            scruberElement.appendChild(bookMarkBtn)
-            bookMarkBtn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                bookmarkClickEventHandler(event);
-            })
-            bookMarkBtn.addEventListener('mouseover', () => {
-                bookMarkBtn.style.opacity = '1';
-            });
-            bookMarkBtn.addEventListener('mouseout', () => {
-                bookMarkBtn.style.opacity = '0.2';
-            });
-        }
+        contentElements.scruberElement.appendChild(bookMarkBtn)
+        bookMarkBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            bookmarkClickEventHandler(event);
+        })
+        bookMarkBtn.addEventListener('mouseover', () => {
+            bookMarkBtn.style.opacity = '1';
+        });
+        bookMarkBtn.addEventListener('mouseout', () => {
+            bookMarkBtn.style.opacity = '0.2';
+        });
     }
 
     const addBookmarksOnProgressBar = async (bookmarks) => {
-        let progressBarElement = document.querySelectorAll('#ytd-player .ytp-chrome-bottom .ytp-progress-bar')[0] || document.getElementsByClassName('ytp-progress-bar')[0]
-        console.log('Progress bar element:', progressBarElement)
         
-        const progressBarValue = youtubePlayer.duration
-        let bookmarksContainer = await addContainer(progressBarElement,'bookmarks-container')
+        console.log('Progress bar element:', contentElements.progressBarElement)
+        
+        const progressBarValue = contentElements.youtubePlayer.duration
+        let bookmarksContainer = await addContainer(contentElements.progressBarElement,'bookmarks-container')
         let progressBarWidth = bookmarksContainer.offsetWidth
-        if (progressBarWidth === 0) {
-            progressBarElement = document.querySelectorAll('.ytp-progress-bar')[0]
-            bookmarksContainer = await addContainer(progressBarElement,'bookmarks-container')
-            console.log('MINIPLAYER Progress bar element:', progressBarElement)
-            progressBarWidth = bookmarksContainer.offsetWidth
-        }
         console.log('Progress bar width:', progressBarWidth, bookmarks)
 
         for (let bookmark of bookmarks) {
@@ -156,8 +202,8 @@ const contentFunc = () => {
             bookmarkElement.addEventListener('click', (event) => {
                 event.preventDefault()
                 event.stopPropagation()
-                youtubePlayer.currentTime = bookmark.time
-                youtubePlayer.play()
+                contentElements.youtubePlayer.currentTime = bookmark.time
+                contentElements.youtubePlayer.play()
             })
             bookmarksContainer.appendChild(bookmarkElement)
         }
@@ -165,9 +211,9 @@ const contentFunc = () => {
 
     const checkIfExists = (bookmarks, newBookmarkTime) => {
         return new Promise((resolve) => {
-            for (element of bookmarks) {
+            for (let element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
-                const upLimit = element.time + 10 > youtubePlayer.duration ? youtubePlayer.duration : element.time + 10
+                const upLimit = element.time + 10 > contentElements.youtubePlayer.duration ? contentElements.youtubePlayer.duration : element.time + 10
                 const lowLimit = element.time - 10 < 0 ? 0 : element.time - 10
                 if (newBookmarkTime <= upLimit && newBookmarkTime >= lowLimit) {
                     const msgLine1 = chrome.i18n.getMessage('cantAddBookmarkLine1')
@@ -204,8 +250,15 @@ const contentFunc = () => {
 
     const newVideoLoaded = async (fromMessage) => {
         newVideoLoadedCalled++
+        try {
+            checkAllElements()
+        }
+        catch (error) {
+            const nativeMessage = 'Error checking all elements:'
+            errorHandler(error, nativeMessage)
+            return
+        }
         const bookmarks = await fetchBookmarks(currentVideoId)
-        youtubePlayer = document.getElementsByClassName('video-stream')[0]
         console.log('Fetch called from newVideoLoaded', fromMessage, newVideoLoadedCalled)
         newVideoLoadedCalled === 1 && addBookmarkButton()
         addBookmarksOnProgressBar(bookmarks)
@@ -215,7 +268,7 @@ const contentFunc = () => {
 
     const bookmarkClickEventHandler = async () => {
 
-        youtubePlayer.pause()
+        contentElements.youtubePlayer.pause()
         
         let currentVideoBookmarks = []
 
@@ -228,15 +281,11 @@ const contentFunc = () => {
             return
         }
 
-        const currentTime = youtubePlayer.currentTime
+        const currentTime = contentElements.youtubePlayer.currentTime
 
         const exists = await checkIfExists(currentVideoBookmarks, currentTime)
         if (exists) return
 
-        await chrome.storage.local.set({ taskStatus: true }, () => {
-            console.log('Task status set to started');
-        });
-        chrome.runtime.sendMessage({ type: "CREATING_BOOKMARK" })
         const currVideoTitle = document.title.split(' - YouTube')[0].replace(/^\(\d+\)\s*/, '').trim()
         const newBookmark = {
             id: currentVideoId,
@@ -250,19 +299,15 @@ const contentFunc = () => {
         chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded('bookmarkClickEventHandler')
             console.log('Bookmark added from content.js:', newBookmark)
-        })
-        await chrome.storage.local.set({ taskStatus: false }, () => {
-            console.log('Task status set to completed');
         });
-        chrome.runtime.sendMessage({ type: "STOP_CREATING_BOOKMARK"})
     }
 
     const addResizeObserver = () => {
 
         const isWindowObserverAdded = document.body.getAttribute('resizeObserverAdded')
-        const isPlayerObserverAdded = document.getElementsByClassName('video-stream')[0].getAttribute('resizeObserverAdded')
-        const isProgressBarObserverAdded = document.getElementsByClassName('ytp-progress-bar')[0].getAttribute('attributesObserverAdded')
-        const isProgressBarResizeObserverAdded = document.getElementsByClassName('ytp-progress-bar')[0].getAttribute('resizeObserverAdded')
+        const isPlayerObserverAdded = contentElements.youtubePlayer.getAttribute('resizeObserverAdded')
+        const isProgressBarObserverAdded = contentElements.progressBarElement.getAttribute('attributesObserverAdded')
+        const isProgressBarResizeObserverAdded = contentElements.progressBarElement.getAttribute('resizeObserverAdded')
 
         if (!isWindowObserverAdded) {
             const resizeObserver = new ResizeObserver(() => {
@@ -284,8 +329,8 @@ const contentFunc = () => {
                     errorHandler(error, nativeMessage)
                 })
             })
-            resizeObserverPlayer.observe(document.getElementsByClassName('video-stream')[0])
-            document.getElementsByClassName('video-stream')[0].setAttribute('resizeObserverAdded', true)
+            resizeObserverPlayer.observe(contentElements.youtubePlayer)
+            contentElements.youtubePlayer.setAttribute('resizeObserverAdded', true)
         }
 
         if (!isProgressBarResizeObserverAdded) {
@@ -300,8 +345,8 @@ const contentFunc = () => {
                     previousProgressBarWidth = entries[entries.length - 1].target.offsetWidth
                 }
             })
-            resizeObserverProgressBar.observe(document.getElementsByClassName('ytp-progress-bar')[0])
-            document.getElementsByClassName('ytp-progress-bar')[0].setAttribute('resizeObserverAdded', true)
+            resizeObserverProgressBar.observe(contentElements.progressBarElement)
+            contentElements.progressBarElement.setAttribute('resizeObserverAdded', true)
         }
 
         if (!isProgressBarObserverAdded) {
@@ -318,14 +363,23 @@ const contentFunc = () => {
                     previousAriaValueMax = mutationList[mutationList.length - 1].target.getAttribute('aria-valuemax')
                 }
             })
-            progressBarMutationObserver.observe(document.getElementsByClassName('ytp-progress-bar')[0], {attributes: true, attributeFilter: ['aria-valuemax']})
-            document.getElementsByClassName('ytp-progress-bar')[0].setAttribute('resizeObserverAdded', true)
+            progressBarMutationObserver.observe(contentElements.progressBarElement, {attributes: true, attributeFilter: ['aria-valuemax']})
+            contentElements.progressBarElement.setAttribute('attributesObserverAdded', true)
         }
     }
 
     const contentOnMeassageListener = (obj) => {
         const { type, value, videoId } = obj
         currentVideoId = videoId
+
+        try {
+            checkAllElements()
+        }
+        catch (error) {
+            const nativeMessage = 'Error checking all elements:'
+            errorHandler(error, nativeMessage)
+            return
+        }
 
         const handleFetchBookmarks = async () => {
             let currentVideoBookmarks = []
@@ -353,7 +407,7 @@ const contentFunc = () => {
                         errorHandler(error, nativeMessage)
                     })
                 } else if (type === 'PLAY') {
-                    youtubePlayer.currentTime = value
+                    contentElements.youtubePlayer.currentTime = value
                 } else if (type === 'DELETE') {
                     console.log('Delete bookmarks:', value, currentVideoBookmarks)
                     currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
@@ -380,6 +434,10 @@ const contentFunc = () => {
                         })
                     })
                     const handleUpdateBookmark = async () => {
+                        if (valueArray.length === 0) {
+                            await bookmarkClickEventHandler()
+                            return
+                        }
                         chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
                             await newVideoLoaded('UPATE')
                             console.log('Bookmark updated:', value, currentVideoBookmarks)

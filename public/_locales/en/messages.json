@@ -116,20 +116,61 @@
     "saveChanges": {
       "message": "Save changes"
     },
-    "timedisc": {
-      "message": "Decrease time"
-    },
-    "timeasc": {
-      "message": "Increase time"
-    },
-    "color": {
-      "message": "By color"
-    },
     "deleteSelectedBookmarks": {
       "message": "Delete selected bookmarks?"
     },
     "toggleTheme": {
-      "message": "Toggle theme"
+      "message": "toggle theme"
+    },
+    "truefalsefalsefalse": {
+      "message": "increase time"
+    },
+    "falsetruefalsefalse": {
+      "message": "decrease time"
+    },
+    "falsefalsetruefalse": {
+      "message": "by color (A-Z)"
+    },
+    "falsefalsefalsetrue": {
+      "message": "by color (Z-A)"
+    },
+    "truefalsefalsetrue": {
+      "message": "by color (Z-A)/time increase"
+    },
+    "truefalsetruefalse": {
+      "message": "by color (A-Z)/time increase"
+    },
+    "falsetruetruefalse": {
+      "message": "by color (A-Z)/time decrease"
+    },
+    "falsetruefalsetrue": {
+      "message": "by color (Z-A)/time decrease"
+    },
+    "selectAll": {
+      "message": "select all"
+    },
+    "deselectAll": {
+      "message": "deselect all"
+    },
+    "invertSelection": {
+      "message": "invert selection"
+    },
+    "selectSameColor": {
+      "message": "select/deselect color"
+    },
+    "expandAll": {
+    "message": "expand All"
+    },
+    "collapseAll": {
+      "message": "collapse All"
+    },
+    "inverseExpand": {
+      "message": "inverse Collapse/Expand"
+    },
+    "expandSameColor": {
+      "message": "same color Collapse/Expand"
+    },
+    "expandSelected": {
+      "message": "expand/collapse selected"
     }
-    
   }

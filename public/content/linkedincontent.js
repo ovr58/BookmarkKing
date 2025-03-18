@@ -20,11 +20,15 @@ const errorHandler = (error, nativeMessage = '') => {
 
 const contentFunc = () => {
 
-    let dzenPlayer
+    let linkedInPlayer
     let currentVideoId = ""
     let isDurationChangeListenerAdded = false
     let durationOld
     let newVideoLoadedExecutedTimes = 0
+    let curProgressBarQueryBig = 'div.vjs-control-bar.vjs-control-bar--tier > div.vjs-progress-control.vjs-control > div.vjs-progress-holder.vjs-slider.vjs-slider-horizontal'
+    let curBookmarkButtonContainerBig = 'ul.classroom-body__nav-actions'
+    let oldProgressBarSizeBig = 0
+    let bookmarkOnProgressBarTopBig = '-25px'
 
     const addContainer = (parentElement, containerToAddId) => {
         return new Promise((resolve) => {
@@ -45,7 +49,7 @@ const contentFunc = () => {
                 containerToAdd = document.createElement('div')
                 containerToAdd.id = containerToAddId
                 containerToAdd.style.position = 'relative'
-                containerToAdd.style.width = `${parentElement.offsetWidth}px`
+                containerToAdd.style.width = '100%'
                 containerToAdd.style.height = '100%'
                 containerToAdd.style.zIndex = '9999'
                 parentElement.appendChild(containerToAdd)
@@ -58,8 +62,8 @@ const contentFunc = () => {
         })
     }
 
-    const popupMessage = (line1, line2) => {
-        const bookMarkBtn = document.getElementsByClassName('bookmark-btn')[0]
+    const popupMessage = (line1, line2, buttonClass) => {
+        let bookMarkBtn = document.getElementsByClassName(buttonClass)[0]
         const isExist = document.getElementById('messageDiv')
         if (isExist) {
             isExist.remove()
@@ -101,19 +105,13 @@ const contentFunc = () => {
     }
 
     const addBookmarksOnProgressBar = async (bookmarks) => {
-        const progressBarElement = document.querySelectorAll('div[aria-label="временная шкала"]')[0]
-        console.log('Progress bar element:', progressBarElement)
-        const progressBarValue = dzenPlayer.duration
-        const bookmarksContainer = await addContainer(progressBarElement,'bookmarks-container')
-        
-        const progressBarWidth = bookmarksContainer ? bookmarksContainer.offsetWidth : 0
+        const progressBarElementBig = document.querySelectorAll(curProgressBarQueryBig)[0]
+        console.log('Progress bar element:', progressBarElementBig)
+        const progressBarValue = linkedInPlayer.duration
+        const bookmarksContainerBig = await addContainer(progressBarElementBig,'bookmarks-container')
+        const progressBarWidthBig = bookmarksContainerBig && bookmarksContainerBig.offsetWidth !==0 ? bookmarksContainerBig.offsetWidth : 0
 
-        if (progressBarWidth === 0) {
-            console.log('Progress bar width is 0:')
-            return
-        }
-
-        console.log('Progress bar width:', progressBarWidth)
+        console.log('Progress bar width:', progressBarWidthBig)
         for (let bookmark of bookmarks) {
             const bookmarkElement = document.createElement('img')
             bookmarkElement.id = 'bookmark-' + bookmark.time
@@ -126,35 +124,85 @@ const contentFunc = () => {
             bookmarkElement.style.cursor = 'pointer'
             bookmarkElement.style.position = 'absolute'
             console.log('BOOKMARK TIME:', bookmark.time)
-            bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidth)-8}px`
-            bookmarkElement.style.top = '-4px'
+            bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidthBig)-8}px`
+            bookmarkElement.style.top = bookmarkOnProgressBarTopBig
             bookmarkElement.style.width = '16px'
             bookmarkElement.style.height = '16px'
-            bookmarkElement.style.zIndex = '9990'
+            bookmarkElement.style.zIndex = '9999'
             bookmarkElement.title = bookmark.title
             bookmarkElement.addEventListener('click', (event) => {
                 event.preventDefault()
                 event.stopPropagation()
-                dzenPlayer.currentTime = bookmark.time
-                dzenPlayer.play()
+                linkedInPlayer.currentTime = bookmark.time
+                linkedInPlayer.play()
             })
-            bookmarksContainer.appendChild(bookmarkElement)
+            bookmarksContainerBig.appendChild(bookmarkElement)
+        }
+    }
+
+    const addBookmarkButton = () => {
+        const bookmarkButtonExistsBig = document.getElementById('bookmark-btn')
+        console.log('Bookmark button exists:', bookmarkButtonExistsBig) 
+        const bookmarkButtonExistsSmall = document.getElementById('bookmark-btn-small')
+        console.log('Bookmark button exists:', bookmarkButtonExistsSmall, bookmarkButtonExistsBig) 
+        if (bookmarkButtonExistsBig) {
+            bookmarkButtonExistsBig.remove()
+        }
+        if (bookmarkButtonExistsSmall) {
+            bookmarkButtonExistsSmall.remove()
+        }
+        let scruberElementBig = document.querySelectorAll(curBookmarkButtonContainerBig)[0]
+        console.log('Scrubber element big:', scruberElementBig)
+        if (scruberElementBig) {
+            const bookMarkBtn = document.createElement('img')
+            bookMarkBtn.src = chrome.runtime.getURL('assets/bookmark64x64.png')
+            bookMarkBtn.className = 'bookmark-btn'
+            bookMarkBtn.id = 'bookmark-btn'
+            bookMarkBtn.title = chrome.i18n.getMessage('bookmarkButtonTooltip')
+            bookMarkBtn.style.cursor = 'pointer'
+            bookMarkBtn.style.position = 'block'
+            bookMarkBtn.style.width = '32px'
+            bookMarkBtn.style.height = '32px'
+            bookMarkBtn.style.zIndex = '150'
+            bookMarkBtn.style.opacity = '0.6'
+            bookMarkBtn.style.transition = 'all 0.5s'
+            
+            bookMarkBtn.style.transition = 'all 0.5s'
+            scruberElementBig.appendChild(bookMarkBtn)
+            bookMarkBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                bookmarkClickEventHandler(event.target.className);
+            })
+            bookMarkBtn.addEventListener('mouseover', () => {
+                bookMarkBtn.style.opacity = '1';
+                bookMarkBtn.style.transform = 'scale(1.5)'
+            });
+            bookMarkBtn.addEventListener('mouseout', () => {
+                bookMarkBtn.style.opacity = '0.6';
+                bookMarkBtn.style.transform = 'scale(1)'
+            });
         }
     }
 
     const addResizeObserver = () => {
 
         const isWindowObserverAdded = document.body.getAttribute('resizeObserverAdded')
-        const isPlayerObserverAdded = dzenPlayer.getAttribute('resizeObserverAdded')
-        const isDurationChangeObserverAdded = dzenPlayer.getAttribute('durationObserverAdded')
+        const isPlayerObserverAdded = linkedInPlayer.getAttribute('resizeObserverAdded')
+        const isDurationChangeObserverAdded = linkedInPlayer.getAttribute('durationObserverAdded')
 
         if (!isWindowObserverAdded) {
             const resizeObserver = new ResizeObserver(() => {
                 const handleFunc = async () => await newVideoLoaded('RESIZE WINDOW')
-                handleFunc().catch(error => {
-                    const nativeMessage = 'Error handling resize:'
-                    errorHandler(error, nativeMessage)
-                })
+                console.log('Resize observer:', oldProgressBarSizeBig, oldProgressBarSizeBig)
+                const curProgressBarQueryWidthBig = document.querySelectorAll(curProgressBarQueryBig)[0] ? document.querySelectorAll(curProgressBarQueryBig)[0].offsetWidth : 0
+                if ((oldProgressBarSizeBig !== curProgressBarQueryWidthBig)) {
+                    oldProgressBarSizeBig = curProgressBarQueryWidthBig
+                    console.log('Resize observer player changed:', oldProgressBarSizeBig)
+                    handleFunc().catch(error => {
+                        const nativeMessage = 'Error handling resize:'
+                        errorHandler(error, nativeMessage)
+                    })
+                }
             })
             resizeObserver.observe(document.body)
             document.body.setAttribute('resizeObserverAdded', true)
@@ -162,25 +210,31 @@ const contentFunc = () => {
 
         if (!isPlayerObserverAdded) {
             const resizeObserverPlayer = new ResizeObserver(() => {
-                const handleFunc = async () => await newVideoLoaded('RESIZE PLAYER')
-                handleFunc().catch(error => {
-                    const nativeMessage = 'Error handling resize player:'
-                    errorHandler(error, nativeMessage)
-                })
+                const handleFunc = async () => await newVideoLoaded('RESIZE WINDOW')
+                console.log('Resize observer:', oldProgressBarSizeBig)
+                const curProgressBarQueryWidthBig = document.querySelectorAll(curProgressBarQueryBig)[0] ? document.querySelectorAll(curProgressBarQueryBig)[0].offsetWidth : 0
+                if ((oldProgressBarSizeBig !== curProgressBarQueryWidthBig)) {
+                    oldProgressBarSizeBig = curProgressBarQueryWidthBig
+                    console.log('Resize observer player changed:', oldProgressBarSizeBig)
+                    handleFunc().catch(error => {
+                        const nativeMessage = 'Error handling resize:'
+                        errorHandler(error, nativeMessage)
+                    })
+                }
             })
-            resizeObserverPlayer.observe(dzenPlayer)
-            dzenPlayer.setAttribute('resizeObserverAdded', true)
+            resizeObserverPlayer.observe(linkedInPlayer)
+            linkedInPlayer.setAttribute('resizeObserverAdded', true)
         }
 
         if (!isDurationChangeObserverAdded) {
             console.log('duration change listener will be added:', isDurationChangeListenerAdded)
             
-            dzenPlayer.addEventListener('durationchange', () => {
+            linkedInPlayer.addEventListener('durationchange', () => {
                 const handleDurationChange = async () => await newVideoLoaded('DURATION CHANGE')
-                if (durationOld === dzenPlayer.duration) {
+                if (durationOld === linkedInPlayer.duration) {
                     return
                 }
-                durationOld = dzenPlayer.duration
+                durationOld = linkedInPlayer.duration
                 handleDurationChange().catch(error => {
                     const nativeMessage = 'Error handling duration change:'
                     errorHandler(error, nativeMessage)
@@ -189,48 +243,16 @@ const contentFunc = () => {
         }
     }
 
-    const addBookmarkButton = () => {
-        const scruberElement = document.getElementsByClassName('video-site--video-header__row-1m')[0]
-        console.log('Scrubber element:', scruberElement)
-        const bookmarkButtonExists = document.getElementById('bookmark-btn')
-        if (bookmarkButtonExists) {
-            bookmarkButtonExists.remove()
-        }
-        if (scruberElement) {
-            const bookMarkBtn = document.createElement('img')
-            bookMarkBtn.src = chrome.runtime.getURL('assets/bookmark64x64.png')
-            bookMarkBtn.className = 'bookmark-btn'
-            bookMarkBtn.id = 'bookmark-btn'
-            bookMarkBtn.title = chrome.i18n.getMessage('bookmarkButtonTooltip')
-            bookMarkBtn.style.cursor = 'pointer'
-            bookMarkBtn.style.position = 'block'
-            bookMarkBtn.style.zIndex = '150'
-            bookMarkBtn.style.opacity = '0.2'
-            bookMarkBtn.style.transition = 'opacity 0.5s'
-            scruberElement.appendChild(bookMarkBtn)
-            bookMarkBtn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                bookmarkClickEventHandler(event);
-            })
-            bookMarkBtn.addEventListener('mouseover', () => {
-                bookMarkBtn.style.opacity = '1';
-            });
-            bookMarkBtn.addEventListener('mouseout', () => {
-                bookMarkBtn.style.opacity = '0.2';
-            });
-        }
-    }
-
-    const checkIfExists = (bookmarks, newBookmarkTime) => {
+    const checkIfExists = (bookmarks, newBookmarkTime, buttonClass) => {
         return new Promise((resolve) => {
             for (let element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
-                const upLimit = element.time + 10 > dzenPlayer.duration ? dzenPlayer.duration : element.time + 10
-                const downLimit = element.time - 10 < 0 ? 0 : element.time - 10
-                if (newBookmarkTime <= upLimit && newBookmarkTime >= downLimit) {
+                const upLimit = element.time + 10 > linkedInPlayer.duration ? linkedInPlayer.duration : element.time + 10
+                const lowLimit = element.time - 10 < 0 ? 0 : element.time - 10
+                if (newBookmarkTime <= upLimit && newBookmarkTime >= lowLimit) {
                     const msgLine1 = chrome.i18n.getMessage('cantAddBookmarkLine1')
-                    const msgLine2 = `${chrome.i18n.getMessage('cantAddBookmarkLine2')} ${getTime(downLimit)} - ${getTime(upLimit)}`
-                    popupMessage(msgLine1, msgLine2)
+                    const msgLine2 = `${chrome.i18n.getMessage('cantAddBookmarkLine2')} ${getTime(lowLimit)} - ${getTime(upLimit)}`
+                    popupMessage(msgLine1, msgLine2, buttonClass)
                     resolve(true)
                     return
                 }
@@ -243,7 +265,7 @@ const contentFunc = () => {
         return currentVideoId ? new Promise((resolve, reject) => {
             try {
                 chrome.storage.sync.get([currentVideoId], (obj) => {
-                    console.log('Bookmarks fetched IN dzencontent:', obj)
+                    console.log('Bookmarks fetched IN linkedIncontent:', obj)
                     if (chrome.runtime.lastError) {
                         const nativeMessage = 'Error fetching bookmarks:'
                         errorHandler(chrome.runtime.lastError, nativeMessage)
@@ -254,6 +276,7 @@ const contentFunc = () => {
                 });
             } catch (error) {
                 errorHandler(error)
+                reject(error);
             }
     }) : []
     }
@@ -261,7 +284,8 @@ const contentFunc = () => {
     const newVideoLoaded = async (fromMessage) => {
         newVideoLoadedExecutedTimes++
         const bookmarks = await fetchBookmarks(currentVideoId)
-        dzenPlayer = document.querySelectorAll('video.zen-ui-video-video-player__player')[0]
+        linkedInPlayer = document.getElementsByClassName('vjs-tech')[0]
+        console.log('LinkedIn player:', linkedInPlayer)
         console.log('Fetch called from newVideoLoaded', fromMessage, newVideoLoadedExecutedTimes)
         newVideoLoadedExecutedTimes === 1 && addBookmarkButton()
         addBookmarksOnProgressBar(bookmarks)
@@ -269,9 +293,9 @@ const contentFunc = () => {
         newVideoLoadedExecutedTimes--
     }
 
-    const bookmarkClickEventHandler = async () => {
-        console.log('Bookmark button clicked', dzenPlayer)
-        dzenPlayer.pause()
+    const bookmarkClickEventHandler = async (buttonClass) => {
+        console.log('Bookmark button clicked', linkedInPlayer)
+        linkedInPlayer.pause()
         
         let currentVideoBookmarks = []
 
@@ -283,28 +307,30 @@ const contentFunc = () => {
             return
         }
 
-        const currentTime = dzenPlayer.currentTime
+        const currentTime = linkedInPlayer.currentTime
 
-        const exists = await checkIfExists(currentVideoBookmarks, currentTime)
+        const exists = await checkIfExists(currentVideoBookmarks, currentTime, buttonClass)
         if (exists) return
 
-        const currVideoTitle = document.title.replace(/^\(\d+\)\s*/, '').trim()
+        const courseTitle = document.getElementsByClassName('classroom-nav__title')[0]
+        const chapterTitle = document.getElementsByClassName('classroom-nav__subtitle')[0]
+        const currVideoTitle = `${courseTitle.textContent} - ${chapterTitle.textContent}`
         const newBookmark = {
             id: currentVideoId,
-            urlTemplate: 'https://dzen.ru/video/watch/',
+            urlTemplate: 'https://www.linkedin.com/learning/',
             time: currentTime,
             title: currVideoTitle,
             bookMarkCaption: currVideoTitle,
-            color: 'bg-orange-600'
+            color: 'bg-red-600'
         }
-        
+
         chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
             await newVideoLoaded()
             console.log('Bookmark added from dzencontent.js:', newBookmark)
         })
     }
 
-    const dzencontentOnMessageListener = (obj) => {
+    const linkedincontentOnMessageListener = (obj) => {
         const { type, value, videoId } = obj
         currentVideoId = videoId
         const handleFetchBookmarks = async () => {
@@ -329,12 +355,12 @@ const contentFunc = () => {
                         });
                     }
                     handleNewVideoLoaded().catch(error => {
-                        const nativeMessage = 'Error handling new video loaded:'
+                        const nativeMessage = 'Error handling new video:'
                         errorHandler(error, nativeMessage)
                     })
                 } else if (type === 'PLAY') {
-                    dzenPlayer.currentTime = value
-                    dzenPlayer.play()
+                    linkedInPlayer.currentTime = value
+                    linkedInPlayer.play()
                 } else if (type === 'DELETE') {
                     console.log('Delete bookmarks:', value, currentVideoBookmarks)
                     currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
@@ -376,25 +402,24 @@ const contentFunc = () => {
                 }
             }
         ).catch(error => {
-            const nativeMessage = 'Error handling onMessage:'
+            const nativeMessage = 'Error handling message:'
             errorHandler(error, nativeMessage)
         })
     }
 
-    chrome.storage.local.get('isDzenMessageListenerAdded', (result) => {
-        if (!result.isDzenMessageListenerAdded) {
-            chrome.runtime.onMessage.addListener(dzencontentOnMessageListener);
-            chrome.storage.local.set({ isDzenMessageListenerAdded: true }, () => {
+    chrome.storage.local.get('isLinkedInOnMessageListenerAdded', (result) => {
+        if (!result.isYtmusicOnMessageListenerAdded) {
+            chrome.runtime.onMessage.addListener(linkedincontentOnMessageListener);
+            chrome.storage.local.set({ isLinkedInOnMessageListenerAdded: true }, () => {
                 console.log('onMessage listener added');
             });
         } else {
             console.log('onMessage listener already added');
-            chrome.runtime.onMessage.removeListener(dzencontentOnMessageListener);
-            chrome.runtime.onMessage.addListener(dzencontentOnMessageListener);
+            chrome.runtime.onMessage.removeListener(linkedincontentOnMessageListener);
+            chrome.runtime.onMessage.addListener(linkedincontentOnMessageListener);
             console.log('onMessage listener re-added');
         }
     });
 };
 
 contentFunc()
-
