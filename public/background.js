@@ -124,5 +124,23 @@ const getUrlParams = async (url) => {
             });
         }
         handleElementFound().catch(console.error);
+    } else if (request.type === "ALL_ELEMENTS_FOUND") {
+        console.log("From background - All elements found");
+        chrome.tabs.sendMessage(sender.tab.id, { type: 'PROCESS', videoId: request.obj.videoId, value: request.obj }, (response) => {
+            if (chrome.runtime.lastError) {
+                console.log("From background - Error sending message:", chrome.runtime.lastError);
+            } else {
+                console.log("From background - Message sent successfully on all elements found:", response);
+            }
+        });
+    } else if (request.type === 'ELEMENTS_NOT_FOUND') {
+        console.log("Elements not found, sending 'NEW' message again")
+        chrome.tabs.sendMessage(sender.tab.id, { type: 'NEW', videoId: request.obj.videoId, value: request.obj }, (response) => {
+            if (chrome.runtime.lastError) {
+                console.log("From background - Error sending message:", chrome.runtime.lastError);
+            } else {
+                console.log("From background - Message sent successfully on all elements found:", response);
+            }
+        });
     }
 });

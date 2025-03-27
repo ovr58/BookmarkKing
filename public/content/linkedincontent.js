@@ -18,17 +18,38 @@ const errorHandler = (error, nativeMessage = '') => {
     }
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+
+}
+
+function isUnic(obj, oldObj) {
+    return JSON.stringify(obj) !== JSON.stringify(oldObj)
+}
+
 const contentFunc = () => {
 
-    let linkedInPlayer
-    let currentVideoId = ""
-    let isDurationChangeListenerAdded = false
+    const contentElementsQuerys = {
+        linkedInPlayer: ['.vjs-tech'],
+        scruberElement: ['ul.classroom-body__nav-actions'],
+        progressBarElement: ['div.vjs-control-bar.vjs-control-bar--tier > div.vjs-progress-control.vjs-control > div.vjs-progress-holder.vjs-slider.vjs-slider-horizontal']
+    }
+    
+    let contentElements = {
+        linkedInPlayer: [],
+        scruberElement: [],
+        progressBarElement: []
+    }
+    
+    let oldObj = {}
     let durationOld
+    let bookmarkOnProgressBarTop = ['-25px']
+    let currentVideoId = ""
     let newVideoLoadedExecutedTimes = 0
-    let curProgressBarQueryBig = 'div.vjs-control-bar.vjs-control-bar--tier > div.vjs-progress-control.vjs-control > div.vjs-progress-holder.vjs-slider.vjs-slider-horizontal'
-    let curBookmarkButtonContainerBig = 'ul.classroom-body__nav-actions'
-    let oldProgressBarSizeBig = 0
-    let bookmarkOnProgressBarTopBig = '-25px'
 
     const addContainer = (parentElement, containerToAddId) => {
         return new Promise((resolve) => {
@@ -44,21 +65,16 @@ const contentFunc = () => {
                 }
             })
             observer.observe(parentElement, { childList: true, subtree: true })
-            let containerToAdd = document.getElementById(containerToAddId)
-            if (!containerToAdd) {
-                containerToAdd = document.createElement('div')
-                containerToAdd.id = containerToAddId
-                containerToAdd.style.position = 'relative'
-                containerToAdd.style.width = '100%'
-                containerToAdd.style.height = '100%'
-                containerToAdd.style.zIndex = '9999'
-                parentElement.appendChild(containerToAdd)
-                console.log('Bookmarks container created:', containerToAdd)
-            } else {
-                containerToAdd.innerHTML = ''
-                observer.disconnect();
-                resolve(containerToAdd);
-            }
+            let containerToAdd = document.createElement('div')
+            containerToAdd.id = containerToAddId
+            containerToAdd.style.position = 'relative'
+            containerToAdd.style.width = '100%'
+            containerToAdd.style.height = '100%'
+            containerToAdd.style.zIndex = '9999'
+            parentElement.appendChild(containerToAdd)
+            console.log('Bookmarks container created:', containerToAdd)
+            observer.disconnect();
+            resolve(containerToAdd);
         })
     }
 
@@ -105,59 +121,61 @@ const contentFunc = () => {
     }
 
     const addBookmarksOnProgressBar = async (bookmarks) => {
-        const progressBarElementBig = document.querySelectorAll(curProgressBarQueryBig)[0]
-        console.log('Progress bar element:', progressBarElementBig)
-        const progressBarValue = linkedInPlayer.duration
-        const bookmarksContainerBig = await addContainer(progressBarElementBig,'bookmarks-container')
-        const progressBarWidthBig = bookmarksContainerBig && bookmarksContainerBig.offsetWidth !==0 ? bookmarksContainerBig.offsetWidth : 0
-
-        console.log('Progress bar width:', progressBarWidthBig)
-        for (let bookmark of bookmarks) {
-            const bookmarkElement = document.createElement('img')
-            bookmarkElement.id = 'bookmark-' + bookmark.time
-            const ifExist = document.getElementById(bookmarkElement.id)
-            if (ifExist) {
-                ifExist.remove()
+        console.log('Progress bar element:', contentElements.progressBarElement)
+        let containersToAdd = document.querySelectorAll('[id*="bookmarks-container"]')
+        if (containersToAdd) {
+            for (let containerToAdd of containersToAdd) {
+                containerToAdd.remove()
             }
-            bookmarkElement.className = 'bookmark-on-progress'
-            bookmarkElement.src = chrome.runtime.getURL('assets/bookmark64x64.png')
-            bookmarkElement.style.cursor = 'pointer'
-            bookmarkElement.style.position = 'absolute'
-            console.log('BOOKMARK TIME:', bookmark.time)
-            bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidthBig)-8}px`
-            bookmarkElement.style.top = bookmarkOnProgressBarTopBig
-            bookmarkElement.style.width = '16px'
-            bookmarkElement.style.height = '16px'
-            bookmarkElement.style.zIndex = '9999'
-            bookmarkElement.title = bookmark.title
-            bookmarkElement.addEventListener('click', (event) => {
-                event.preventDefault()
-                event.stopPropagation()
-                linkedInPlayer.currentTime = bookmark.time
-                linkedInPlayer.play()
-            })
-            bookmarksContainerBig.appendChild(bookmarkElement)
+        }
+        for (let i = 0; i<contentElements.progressBarElement.length; i++) {
+            const progressBarValue = contentElements.linkedInPlayer[0].duration
+            const bookmarksContainer = await addContainer(contentElements.progressBarElement[i], `bookmarks-container-${i}`)
+            const progressBarWidth = bookmarksContainer.offsetWidth
+
+            console.log('Progress bar width:', progressBarWidth)
+            for (let bookmark of bookmarks) {
+                const bookmarkElement = document.createElement('img')
+                bookmarkElement.id = `bookmark-${bookmark.time}-${i}`
+                const ifExist = document.getElementById(bookmarkElement.id)
+                if (ifExist) {
+                    ifExist.remove()
+                }
+                bookmarkElement.className = 'bookmark-on-progress'
+                bookmarkElement.src = chrome.runtime.getURL('assets/bookmark64x64.png')
+                bookmarkElement.style.cursor = 'pointer'
+                bookmarkElement.style.position = 'absolute'
+                console.log('BOOKMARK TIME:', bookmark.time)
+                bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidth)-8}px`
+                bookmarkElement.style.top = bookmarkOnProgressBarTop[i]
+                bookmarkElement.style.width = '16px'
+                bookmarkElement.style.height = '16px'
+                bookmarkElement.style.zIndex = '9999'
+                bookmarkElement.title = bookmark.title
+                bookmarkElement.addEventListener('click', (event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    contentElements.linkedInPlayer[0].currentTime = bookmark.time
+                    contentElements.linkedInPlayer[0].play()
+                })
+                bookmarksContainer.appendChild(bookmarkElement)
+            }
         }
     }
 
     const addBookmarkButton = () => {
-        const bookmarkButtonExistsBig = document.getElementById('bookmark-btn')
-        console.log('Bookmark button exists:', bookmarkButtonExistsBig) 
-        const bookmarkButtonExistsSmall = document.getElementById('bookmark-btn-small')
-        console.log('Bookmark button exists:', bookmarkButtonExistsSmall, bookmarkButtonExistsBig) 
-        if (bookmarkButtonExistsBig) {
-            bookmarkButtonExistsBig.remove()
-        }
-        if (bookmarkButtonExistsSmall) {
-            bookmarkButtonExistsSmall.remove()
-        }
-        let scruberElementBig = document.querySelectorAll(curBookmarkButtonContainerBig)[0]
-        console.log('Scrubber element big:', scruberElementBig)
-        if (scruberElementBig) {
+        console.log('Add bookmark button:', contentElements.scruberElement)
+        for (let i = 0; i<contentElements.scruberElement.length; i++) {
+            console.log('Add bookmark button:', contentElements.scruberElement[i])
+            const bookmarkButtonExists = document.getElementById(`bookmark-btn-${i}`)
+            if (bookmarkButtonExists) {
+                bookmarkButtonExists.remove()
+            }
+            console.log('Scrubber element big:', contentElements.scruberElement[i])
             const bookMarkBtn = document.createElement('img')
             bookMarkBtn.src = chrome.runtime.getURL('assets/bookmark64x64.png')
             bookMarkBtn.className = 'bookmark-btn'
-            bookMarkBtn.id = 'bookmark-btn'
+            bookMarkBtn.id = `bookmark-btn-${i}`
             bookMarkBtn.title = chrome.i18n.getMessage('bookmarkButtonTooltip')
             bookMarkBtn.style.cursor = 'pointer'
             bookMarkBtn.style.position = 'block'
@@ -187,59 +205,38 @@ const contentFunc = () => {
     const addResizeObserver = () => {
 
         const isWindowObserverAdded = document.body.getAttribute('resizeObserverAdded')
-        const isPlayerObserverAdded = linkedInPlayer.getAttribute('resizeObserverAdded')
-        const isDurationChangeObserverAdded = linkedInPlayer.getAttribute('durationObserverAdded')
+        const isPlayerObserverAdded = contentElements.linkedInPlayer[0].getAttribute('resizeObserverAdded')
+        const isDurationChangeObserverAdded = contentElements.linkedInPlayer[0].getAttribute('durationObserverAdded')
 
         if (!isWindowObserverAdded) {
+            console.log('window resize observer will be added:', isWindowObserverAdded)
             const resizeObserver = new ResizeObserver(() => {
-                const handleFunc = async () => await newVideoLoaded('RESIZE WINDOW')
-                console.log('Resize observer:', oldProgressBarSizeBig, oldProgressBarSizeBig)
-                const curProgressBarQueryWidthBig = document.querySelectorAll(curProgressBarQueryBig)[0] ? document.querySelectorAll(curProgressBarQueryBig)[0].offsetWidth : 0
-                if ((oldProgressBarSizeBig !== curProgressBarQueryWidthBig)) {
-                    oldProgressBarSizeBig = curProgressBarQueryWidthBig
-                    console.log('Resize observer player changed:', oldProgressBarSizeBig)
-                    handleFunc().catch(error => {
-                        const nativeMessage = 'Error handling resize:'
-                        errorHandler(error, nativeMessage)
-                    })
-                }
+                debounce(checkAllElements({type: 'RESIZE', videoId: currentVideoId, value: 0}), 1000)
             })
             resizeObserver.observe(document.body)
             document.body.setAttribute('resizeObserverAdded', true)
         }
 
         if (!isPlayerObserverAdded) {
+            console.log('player resize observer will be added:', isPlayerObserverAdded)
             const resizeObserverPlayer = new ResizeObserver(() => {
-                const handleFunc = async () => await newVideoLoaded('RESIZE WINDOW')
-                console.log('Resize observer:', oldProgressBarSizeBig)
-                const curProgressBarQueryWidthBig = document.querySelectorAll(curProgressBarQueryBig)[0] ? document.querySelectorAll(curProgressBarQueryBig)[0].offsetWidth : 0
-                if ((oldProgressBarSizeBig !== curProgressBarQueryWidthBig)) {
-                    oldProgressBarSizeBig = curProgressBarQueryWidthBig
-                    console.log('Resize observer player changed:', oldProgressBarSizeBig)
-                    handleFunc().catch(error => {
-                        const nativeMessage = 'Error handling resize:'
-                        errorHandler(error, nativeMessage)
-                    })
-                }
+                debounce(checkAllElements({type: 'RESIZE', videoId: currentVideoId, value: 0}), 1000)
             })
-            resizeObserverPlayer.observe(linkedInPlayer)
-            linkedInPlayer.setAttribute('resizeObserverAdded', true)
+            resizeObserverPlayer.observe(contentElements.linkedInPlayer[0])
+            contentElements.linkedInPlayer[0].setAttribute('resizeObserverAdded', true)
         }
 
         if (!isDurationChangeObserverAdded) {
-            console.log('duration change listener will be added:', isDurationChangeListenerAdded)
+            console.log('duration change listener will be added:', isDurationChangeObserverAdded)
             
-            linkedInPlayer.addEventListener('durationchange', () => {
-                const handleDurationChange = async () => await newVideoLoaded('DURATION CHANGE')
-                if (durationOld === linkedInPlayer.duration) {
+            contentElements.linkedInPlayer[0].addEventListener('durationchange', () => {
+                if (durationOld === contentElements.linkedInPlayer[0].duration) {
                     return
                 }
-                durationOld = linkedInPlayer.duration
-                handleDurationChange().catch(error => {
-                    const nativeMessage = 'Error handling duration change:'
-                    errorHandler(error, nativeMessage)
-                })
+                durationOld = contentElements.linkedInPlayer[0].duration
+                debounce(checkAllElements({type: 'RESIZE', videoId: currentVideoId, value: 0}), 1000)
             })
+            contentElements.linkedInPlayer[0].setAttribute('durationObserverAdded', true)
         }
     }
 
@@ -247,7 +244,7 @@ const contentFunc = () => {
         return new Promise((resolve) => {
             for (let element of bookmarks) {
                 console.log(element.time, newBookmarkTime)
-                const upLimit = element.time + 10 > linkedInPlayer.duration ? linkedInPlayer.duration : element.time + 10
+                const upLimit = element.time + 10 > contentElements.linkedInPlayer[0].duration ? contentElements.linkedInPlayer[0].duration : element.time + 10
                 const lowLimit = element.time - 10 < 0 ? 0 : element.time - 10
                 if (newBookmarkTime <= upLimit && newBookmarkTime >= lowLimit) {
                     const msgLine1 = chrome.i18n.getMessage('cantAddBookmarkLine1')
@@ -281,21 +278,49 @@ const contentFunc = () => {
     }) : []
     }
 
+    const newVideoLoadedQueue = [];
+    let isProcessingNewVideoLoaded = false;
+
+    const processNewVideoLoadedQueue = async () => {
+        if (isProcessingNewVideoLoaded || newVideoLoadedQueue.length === 0) {
+            return;
+        }
+
+        isProcessingNewVideoLoaded = true;
+        const { fromMessage, resolve } = newVideoLoadedQueue.shift();
+
+        try {
+            await newVideoLoaded(fromMessage);
+            resolve();
+        } catch (error) {
+            console.error('Error processing newVideoLoaded:', error);
+            resolve();
+        } finally {
+            isProcessingNewVideoLoaded = false;
+            processNewVideoLoadedQueue();
+        }
+    };          
+
+    const enqueueNewVideoLoaded = (fromMessage) => {
+        return new Promise((resolve) => {
+            newVideoLoadedQueue.push({ fromMessage, resolve });
+            processNewVideoLoadedQueue();
+        });
+    };
+
     const newVideoLoaded = async (fromMessage) => {
         newVideoLoadedExecutedTimes++
         const bookmarks = await fetchBookmarks(currentVideoId)
-        linkedInPlayer = document.getElementsByClassName('vjs-tech')[0]
-        console.log('LinkedIn player:', linkedInPlayer)
         console.log('Fetch called from newVideoLoaded', fromMessage, newVideoLoadedExecutedTimes)
-        newVideoLoadedExecutedTimes === 1 && addBookmarkButton()
+        addBookmarkButton()
         addBookmarksOnProgressBar(bookmarks)
         addResizeObserver()
         newVideoLoadedExecutedTimes--
     }
 
     const bookmarkClickEventHandler = async (buttonClass) => {
-        console.log('Bookmark button clicked', linkedInPlayer)
-        linkedInPlayer.pause()
+        console.log('Bookmark button clicked', contentElements.linkedInPlayer)
+        contentElements.linkedInPlayer[0].pause()
         
         let currentVideoBookmarks = []
 
@@ -307,7 +332,7 @@ const contentFunc = () => {
             return
         }
 
-        const currentTime = linkedInPlayer.currentTime
+        const currentTime = contentElements.linkedInPlayer[0].currentTime
 
         const exists = await checkIfExists(currentVideoBookmarks, currentTime, buttonClass)
         if (exists) return
@@ -325,12 +350,42 @@ const contentFunc = () => {
         }
 
         chrome.storage.sync.set({[currentVideoId]: JSON.stringify([...currentVideoBookmarks, newBookmark].sort((a,b) => a.time - b.time))}, async () => {
-            await newVideoLoaded()
+            await enqueueNewVideoLoaded()
             console.log('Bookmark added from dzencontent.js:', newBookmark)
         })
     }
 
-    const linkedincontentOnMessageListener = (obj) => {
+    const checkAllElements = (obj) => {
+        console.log('Check all elements:', obj.type, obj.videoId, obj.value)
+        
+        contentElements.linkedInPlayer = findTruthyElements(contentElementsQuerys.linkedInPlayer, (element) => element);
+        contentElements.scruberElement = findTruthyElements(contentElementsQuerys.scruberElement);
+        contentElements.progressBarElement = findTruthyElements(contentElementsQuerys.progressBarElement);
+        console.log('Check all elements:', contentElements.linkedInPlayer, contentElements.scruberElement, contentElements.progressBarElement)
+        if (contentElements.linkedInPlayer.length > 0 && contentElements.scruberElement.length > 0 && contentElements.progressBarElement.length > 0) {
+            console.log('Process bookmarks:', obj)
+            if (obj.type === 'PLAY') {
+                contentElements.linkedInPlayer[0].currentTime = obj.value
+                contentElements.linkedInPlayer[0].play()
+            } else if (obj.type === 'UPDATE-ADD') {
+                bookmarkClickEventHandler().catch(error => {
+                    const nativeMessage = 'Error handling update-add:'
+                    errorHandler(error, nativeMessage)
+                })
+                return
+            }
+            enqueueNewVideoLoaded('PROCESS').catch(error => {
+                const nativeMessage = 'Error handling process:'
+                errorHandler(error, nativeMessage)
+            })
+        } else {
+            oldObj = {}
+            chrome.runtime.sendMessage({ type: 'ELEMENTS_NOT_FOUND', obj: obj });
+        }
+    }
+
+    const messageProcess = (obj) => {
+
         const { type, value, videoId } = obj
         currentVideoId = videoId
         const handleFetchBookmarks = async () => {
@@ -348,34 +403,32 @@ const contentFunc = () => {
         handleFetchBookmarks().then(
             (currentVideoBookmarks) => {
                 if (type === 'NEW') {
-                    const handleNewVideoLoaded = async () => {
-                        chrome.storage.local.set({ taskStatus: false }, async () => {
-                            await newVideoLoaded('NEW')
-                            console.log('Task status set to false');
+                    const handleCheckAllElements = () => {
+                        chrome.storage.local.set({ taskStatus: false }, () => {
+                            checkAllElements(obj)
+                            console.log('Task status set to false, check elements on NEW begun');
                         });
                     }
-                    handleNewVideoLoaded().catch(error => {
-                        const nativeMessage = 'Error handling new video:'
-                        errorHandler(error, nativeMessage)
-                    })
+                    handleCheckAllElements()
                 } else if (type === 'PLAY') {
-                    linkedInPlayer.currentTime = value
-                    linkedInPlayer.play()
+                    const handleCheckAllElements = () => {
+                        checkAllElements(obj)
+                        console.log('Check elements on PLAY begun');
+                    }
+                    handleCheckAllElements()
                 } else if (type === 'DELETE') {
                     console.log('Delete bookmarks:', value, currentVideoBookmarks)
                     currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !value.includes(bookmark.time))
-                    const handleDeleteBookmark = async () => {
-                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
-                            await newVideoLoaded('DELETE')
-                            console.log('Bookmark deleted:', value, currentVideoBookmarks)
+                    const handleCheckAllElements = () => {
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, () => {
+                            checkAllElements(obj)
+                            console.log('Bookmark deleted check all elements begun:', value, currentVideoBookmarks)
                         })
                     }
-                    handleDeleteBookmark().catch(error => {
-                        const nativeMessage = 'Error deleting bookmark:'
-                        errorHandler(error, nativeMessage)
-                    })
+                    handleCheckAllElements()
                 } else if (type === 'UPDATE') {
                     const valueArray = JSON.parse(value)
+                    console.log('Update bookmarks:', valueArray)
                     valueArray.forEach((element) => {
                         currentVideoBookmarks = currentVideoBookmarks.map(bookmark => {
                             if (bookmark.time === element.time) {
@@ -385,26 +438,32 @@ const contentFunc = () => {
                             return bookmark
                         })
                     })
-                    const handleUpdateBookmark = async () => {
+                    const handleCheckAllElements = () => {
                         if (valueArray.length === 0) {
-                            await bookmarkClickEventHandler()
+                            checkAllElements({...obj, type: 'UPDATE-ADD'})
+                            console.log('Check elements on UPDATE-ADD begun:', {...obj, type: 'UPDATE-ADD'})
                             return
                         }
-                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, async () => {
-                            await newVideoLoaded('UPATE')
-                            console.log('Bookmark updated:', value, currentVideoBookmarks)
+                        chrome.storage.sync.set({[currentVideoId]: JSON.stringify(currentVideoBookmarks)}, () => {
+                            checkAllElements(obj)
+                            console.log('Bookmark updated check for all elements begun:', value, currentVideoBookmarks)
                         })
                     }
-                    handleUpdateBookmark().catch(error => {
-                        const nativeMessage = 'Error updating bookmark:'
-                        errorHandler(error, nativeMessage)
-                    })
+                    handleCheckAllElements()
                 }
             }
         ).catch(error => {
             const nativeMessage = 'Error handling message:'
             errorHandler(error, nativeMessage)
         })
+    }
+
+    const linkedincontentOnMessageListener = (obj) => {
+        console.log('Message received in ytmusicontent:', obj)
+        if (isUnic(obj, oldObj)) {
+            oldObj = obj
+            debounce(messageProcess(obj), 1000)
+        }
     }
 
     chrome.storage.local.get('isLinkedInOnMessageListenerAdded', (result) => {

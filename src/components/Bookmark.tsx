@@ -114,7 +114,7 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
                 onClick={(e) => handleBookmarkOpen(e, bookmark)}
                 title={chrome.i18n.getMessage('expandToggle')}
             >
-                <div className="w-full cursor-pointer select-none justify-between items-center mb-3 pl-2" key="time-and-title">
+                <div className="w-full cursor-pointer select-none justify-between items-center text-left mb-3 pl-2" key="time-and-title">
                     <h2 className="text-md leading-snug font-extrabold text-componentDark dark:text-component truncate mb-1">{`${getTimestamp(bookmark.time)} > ${bookmark.title}`}</h2>
                 </div>
                 <motion.div
@@ -210,9 +210,9 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
                 </motion.div>
             </div>
         </div>
-        <div className={`absolute left-0 top-0 content-center z-20 items-center ${bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[100%] ${bookmark.color} rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
+        <div className={`absolute left-0 top-0 content-center z-20 items-center ${bookmarkState[bookmark.time.toString()] ? bookmarkState[bookmark.time.toString()].isSelected ? 'w-[12px]' : 'w-[8px]' : 'w-[8px]'} hover:w-[12px] hover:cursor-pointer transform transition-all duration-150 ease-in-out h-[100%] ${bookmark.color} rounded-lg`} onClick={(e) => handleBookmarkSelect(e, bookmark)}>
             <AnimatePresence key='bookmarkPinnedAnimatePresence'>
-            {bookmarkState[bookmark.time.toString()].isSelected ? 
+            {bookmarkState[bookmark.time.toString()] && bookmarkState[bookmark.time.toString()].isSelected ? 
                 <motion.div
                     initial={{ x: -3, y: -50, rotate: -75, opacity: 0.3 }}
                     animate={{ y: bookmarkState[bookmark.time.toString()].isOpen ? 0 : -34, rotate: 20, opacity: 1, scale: bookmarkState[bookmark.time.toString()].isOpen ? 1 : 0.7 }}

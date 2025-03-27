@@ -185,7 +185,7 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
               id={`bookmark-${i}-${bookmark.time}`}
               className="w-full h-auto mb-2 max-w-2xl mx-auto bg-light dark:bg-primaryDark shadow-lg border-solid border-gray-500 border-2 border-b-4 dark:border-none rounded-xl overflow-hidden"
               initial={{ opacity: 1, height: '24px' }}
-              animate={{ height: bookmarkState[bookmark.time.toString()].isOpen ? 'auto' : '24px'}}
+              animate={{ height: bookmarkState[bookmark.time.toString()] ? bookmarkState[bookmark.time.toString()].isOpen ? 'auto' : '24px' : '24px' }}
               exit={{ opacity: 0, height: '1px' }}
               transition={{ duration: 0.5 }}
           >
