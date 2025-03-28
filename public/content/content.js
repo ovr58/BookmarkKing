@@ -166,7 +166,7 @@ const contentFunc = () => {
             }
             const bookMarkBtn = document.createElement('img')
             bookMarkBtn.src = chrome.runtime.getURL('assets/bookmark64x64.png')
-            bookMarkBtn.className = 'bookmark-btn'
+            bookMarkBtn.className = 'ytp-button bookmark-btn'
             bookMarkBtn.id = `bookmark-btn-${i}`
             bookMarkBtn.title = chrome.i18n.getMessage('bookmarkButtonTooltip')
             bookMarkBtn.style.cursor = 'pointer'

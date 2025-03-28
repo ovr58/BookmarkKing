@@ -205,8 +205,8 @@ const contentFunc = () => {
     const addResizeObserver = () => {
 
         const isWindowObserverAdded = document.body.getAttribute('resizeObserverAdded')
-        const isPlayerObserverAdded = contentElements.dzenPlayer.getAttribute('resizeObserverAdded')
-        const isDurationChangeObserverAdded = contentElements.dzenPlayer.getAttribute('durationObserverAdded')
+        const isPlayerObserverAdded = contentElements.dzenPlayer[0].getAttribute('resizeObserverAdded')
+        const isDurationChangeObserverAdded = contentElements.dzenPlayer[0].getAttribute('durationObserverAdded')
 
         if (!isWindowObserverAdded) {
             const resizeObserver = new ResizeObserver(() => {
@@ -220,17 +220,17 @@ const contentFunc = () => {
             const resizeObserverPlayer = new ResizeObserver(() => {
                 debounce(checkAllElements({type: 'RESIZE', videoId: currentVideoId, value: 0}), 1000)
             })
-            resizeObserverPlayer.observe(contentElements.dzenPlayer)
-            contentElements.dzenPlayer.setAttribute('resizeObserverAdded', true)
+            resizeObserverPlayer.observe(contentElements.dzenPlayer[0])
+            contentElements.dzenPlayer[0].setAttribute('resizeObserverAdded', true)
         }
 
         if (!isDurationChangeObserverAdded) {
             console.log('duration change listener will be added:', isDurationChangeListenerAdded)
             
-            contentElements.dzenPlayer.addEventListener('durationchange', () => {
+            contentElements.dzenPlayer[0].addEventListener('durationchange', () => {
                 debounce(checkAllElements({type: 'RESIZE', videoId: currentVideoId, value: 0}), 1000)
             })
-            contentElements.dzenPlayer.setAttribute('durationObserverAdded', true)
+            contentElements.dzenPlayer[0].setAttribute('durationObserverAdded', true)
         }
     }
 
@@ -312,7 +312,7 @@ const contentFunc = () => {
     }
 
     const bookmarkClickEventHandler = async () => {
-        console.log('Bookmark button clicked', contentElements.dzenPlayer)
+        console.log('Bookmark button clicked', contentElements.dzenPlayer[0])
         contentElements.dzenPlayer[0].pause()
         
         let currentVideoBookmarks = []

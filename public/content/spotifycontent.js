@@ -111,7 +111,7 @@ const contentFunc = () => {
         if (rangeInput) {
             const newValue = parseFloat(rangeInput.max) * positionPercentage / 100;
             rangeInput.value = newValue.toFixed(0);
-            console.log('Range input value set:', newValue, rangeInput.value, positionPercentage);
+            console.log('Range input value set:',rangeInput.max, newValue, rangeInput.value, positionPercentage);
             const inputEvent = new Event('input', { bubbles: true, value: newValue.toFixed(0) });
             const changeEvent = new Event('change', { bubbles: true, value: newValue.toFixed(0) });
             rangeInput.dispatchEvent(inputEvent);
@@ -230,7 +230,6 @@ const contentFunc = () => {
             bookmarkElement.style.zIndex = '9999'
             bookmarkElement.title = `${bookmark.title} - ${getTime(bookmark.time)}`
             bookmarkElement.addEventListener('click', () => {
-                contentElements.spotifyPlayer[0].currentTime = bookmark.time
                 contentElements.spotifyPlayer[0].play(bookmark.time)
             })
             bookmarksContainer.appendChild(bookmarkElement)
@@ -531,8 +530,7 @@ const contentFunc = () => {
                     goRender()
                 } else if (obj.type === 'PLAY') {
                     console.log('Play video:', obj.value)
-                    contentElements.spotifyPlayer[0].currentTime = obj.value
-                    contentElements.spotifyPlayer[0].play()
+                    contentElements.spotifyPlayer[0].play(obj.value)
                 } else if (obj.type === 'DELETE') {
                     console.log('Delete bookmarks:', obj.value, currentVideoBookmarks)
                     currentVideoBookmarks = currentVideoBookmarks.filter(bookmark => !obj.value.includes(bookmark.time))

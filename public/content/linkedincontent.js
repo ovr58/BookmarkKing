@@ -51,6 +51,12 @@ const contentFunc = () => {
     let currentVideoId = ""
     let newVideoLoadedExecutedTimes = 0
 
+    const findTruthyElements = (selectors, filterCondition = (element) => element && element.offsetWidth !== 0) => {
+        return selectors
+        .flatMap(selector => Array.from(document.querySelectorAll(selector)))
+        .filter(filterCondition);
+    };
+
     const addContainer = (parentElement, containerToAddId) => {
         return new Promise((resolve) => {
             if (!parentElement) {
@@ -186,7 +192,7 @@ const contentFunc = () => {
             bookMarkBtn.style.transition = 'all 0.5s'
             
             bookMarkBtn.style.transition = 'all 0.5s'
-            scruberElementBig.appendChild(bookMarkBtn)
+            contentElements.scruberElement[i].appendChild(bookMarkBtn)
             bookMarkBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 bookmarkClickEventHandler(event.target.className);

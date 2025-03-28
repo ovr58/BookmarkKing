@@ -22,7 +22,7 @@
       "js": ["content/content.js"]
     },
     {
-      "matches": ["https://*.vkvideo.ru/*", "https://*.vk.com/*"],
+      "matches": ["https://*.vkvideo.ru/*", "https://vkvideo.ru/*", "https://*.vk.com/*"],
       "js": ["content/vkcontent.js"]
     },
     {
