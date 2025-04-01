@@ -15,7 +15,7 @@ export const theme = {
       secondary: '#ffed4a',
       danger: '#e3342f',
       componentDark: '#212529',
-      primaryDark: '#1d4ed8', // Более темный оттенок синего
+      primaryDark: '#0e4d92', // Более темный оттенок синего
       secondaryDark: '#d97706', // Более темный оттенок желтого
       dangerDark: '#b91c1c',
     }

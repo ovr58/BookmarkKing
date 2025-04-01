@@ -105,6 +105,8 @@ const Bookmark: React.FC<BookmarkProps> = ({ bookmark, curTab, bookmarkState, se
             }
         }
     }, [isExpanded, expandedHeight])
+
+    console.log('Bookmark:', bookmark)
     
     return (
     <div className="px-1 py-1 relative z-0" key={bookmark.time}>

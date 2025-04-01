@@ -1,5 +1,18 @@
 /* global chrome */
 
+const presetColors = {
+    'bg-red-600': '#dc2626', // Красный
+    'bg-orange-600': '#ea580c', // Оранжевый
+    'bg-yellow-400': '#ffc300', // Желтый
+    'bg-cyan-600': '#17a2b8', // Циан
+    'bg-green-600': '#28a745', // Зеленый
+    'bg-blue-600': '#1d4ed8', // Синий
+    'bg-violet-500': '#6f42c1', // Фиолетовый
+    'bg-pink-500': '#e83e8c', // Розовый
+    'bg-yellow-900': '#8b4513', // Коричневый
+    'bg-gray-500': '#6c757d'  // Серый
+};
+
 const getTime = (time) => {
     let date = new Date(null)
     date.setSeconds(time)
@@ -134,13 +147,34 @@ const contentFunc = () => {
                 if (ifExist) {
                     ifExist.remove()
                 }
+                const bookmarkWrapper = document.createElement('div');
+                bookmarkWrapper.style.position = 'absolute';
+                bookmarkWrapper.style.left = `${((bookmark.time / progressBarValue) * progressBarWidth) - 10}px`; 
+                bookmarkWrapper.style.top = '-12px'; 
+                bookmarkWrapper.style.width = '18px';
+                bookmarkWrapper.style.height = '18px';
+                bookmarkWrapper.style.borderRadius = '50%';
+                bookmarkWrapper.style.borderColor = presetColors[bookmark.color];
+                bookmarkWrapper.style.borderWidth = '2px';
+                bookmarkWrapper.style.borderStyle = 'solid';
+                bookmarkWrapper.style.display = 'flex';
+                bookmarkWrapper.style.alignItems = 'center';
+                bookmarkWrapper.style.justifyContent = 'center';
+                bookmarkWrapper.style.zIndex = '9990';
+                bookmarkWrapper.style.opacity = '1'
+                bookmarkWrapper.style.transition = 'all 0.3s ease-in-out'
+                bookmarkWrapper.addEventListener('mouseover', () => {
+                    bookmarkWrapper.style.transform = 'scale(0.67)';
+                    bookmarkWrapper.style.transition = 'transform 0.3s ease-in-out';
+                });
+                bookmarkWrapper.addEventListener('mouseout', () => {
+                    bookmarkWrapper.style.transform = 'scale(1)';
+                    bookmarkWrapper.style.transition = 'transform 0.3s ease-in-out';
+                });
                 bookmarkElement.className = 'bookmark-on-progress'
                 bookmarkElement.style.cursor = 'pointer'
-                bookmarkElement.style.position = 'absolute'
+                bookmarkElement.style.position = 'relative'
                 bookmarkElement.src = chrome.runtime.getURL('assets/bookmark64x64.png')
-                console.log('Bookmark left:', bookmark.time, progressBarValue, progressBarWidth, (bookmark.time / progressBarValue) * progressBarWidth)
-                bookmarkElement.style.left = `${((bookmark.time / progressBarValue) * progressBarWidth)-8}px`
-                bookmarkElement.style.top = '-8px'
                 bookmarkElement.style.width = '16px'
                 bookmarkElement.style.height = '16px'
                 bookmarkElement.style.zIndex = '9999'
@@ -151,7 +185,8 @@ const contentFunc = () => {
                     contentElements.youtubePlayer[0].currentTime = bookmark.time
                     contentElements.youtubePlayer[0].play()
                 })
-                bookmarksContainer.appendChild(bookmarkElement)
+                bookmarkWrapper.appendChild(bookmarkElement);
+                bookmarksContainer.appendChild(bookmarkWrapper)
             }
         }
     }
@@ -172,7 +207,7 @@ const contentFunc = () => {
             bookMarkBtn.style.cursor = 'pointer'
             bookMarkBtn.style.position = 'block'
             bookMarkBtn.style.zIndex = '150'
-            bookMarkBtn.style.opacity = '0.2'
+            bookMarkBtn.style.opacity = '0.6'
             bookMarkBtn.style.transition = 'opacity 0.5s'
             contentElements.scruberElement[i].appendChild(bookMarkBtn)
             bookMarkBtn.addEventListener('click', (event) => {
@@ -183,7 +218,7 @@ const contentFunc = () => {
                 bookMarkBtn.style.opacity = '1';
             });
             bookMarkBtn.addEventListener('mouseout', () => {
-                bookMarkBtn.style.opacity = '0.2';
+                bookMarkBtn.style.opacity = '0.4';
             });
         }
     }
@@ -351,7 +386,13 @@ const contentFunc = () => {
         
         contentElements.youtubePlayer = findTruthyElements(contentElementsQuerys.youtubePlayer, (element) => element);
         contentElements.scruberElement = findTruthyElements(contentElementsQuerys.scruberElement);
-        contentElements.progressBarElement = findTruthyElements(contentElementsQuerys.progressBarElement);
+        contentElements.progressBarElement = findTruthyElements(contentElementsQuerys.progressBarElement, (element, index, self) => {
+            const rect = element.getBoundingClientRect();
+            return element && element.offsetWidth !== 0 && self.findIndex(e => {
+            const eRect = e.getBoundingClientRect();
+            return eRect.left === rect.left && eRect.top === rect.top;
+            }) === index;
+        });
         console.log('Check all elements:', contentElements.youtubePlayer, contentElements.scruberElement, contentElements.progressBarElement)
         if (contentElements.youtubePlayer.length > 0 && contentElements.scruberElement.length > 0 && contentElements.progressBarElement.length > 0) {
             console.log('Process bookmarks:', obj)

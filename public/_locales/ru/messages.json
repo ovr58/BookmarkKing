@@ -6,7 +6,7 @@
       "message": "Расширение для закладок YouTube"
     },
     "extensionDescription": {
-      "message": "Расширение для добавления закладок на YouTube видео."
+      "message": "Расширение для добавления закладок работает на этих сайтах: "
     },
     "addBookmark": {
       "message": "Добавить закладку"
@@ -169,5 +169,8 @@
     },
     "expandSelected": {
       "message": "Развернуть/свернуть выбранные"
+    },
+    "addFirstBookmark": {
+        "message": "Добавьте вашу первую закладку"
     }
   }

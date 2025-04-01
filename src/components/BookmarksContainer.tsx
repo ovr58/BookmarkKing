@@ -5,11 +5,12 @@ import { onDelete, onPlay, onUpdate, VideoElementInfo } from '../utils'
 import UiContainer from './UiContainer';
 
 interface BookmarksContainerProps {
+  uiSetup: number[];
   curSessionVideo: VideoElementInfo[];
   curTab: { url: string; id: number; };
 }
 
-const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo, curTab }) => {
+const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ uiSetup, curSessionVideo, curTab }) => {
 
   const calcBookmarkState = useCallback((video: VideoElementInfo[]) => {
     return {...Object.fromEntries(video.map(bookmark => [
@@ -163,10 +164,19 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
   const handleAddBookmark = () => {
     onUpdate(curTab, [], curSessionVideo[0].id)
   }
+
+  
+  // const handleVideoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   const video = JSON.parse(e.target.value)
+  //   openVideo(video)
+  // }
       
   return (
     <>
     <UiContainer 
+      uiSetup={uiSetup}
       bookmarkState={bookmarkState}
       handleExpandByCommand={handleExpandByCommand} 
       handleSellectByCommand={handleSellectByCommand}
@@ -189,13 +199,15 @@ const BookmarksContainer: React.FC<BookmarksContainerProps> = ({ curSessionVideo
               exit={{ opacity: 0, height: '1px' }}
               transition={{ duration: 0.5 }}
           >
-              <Bookmark 
-                  bookmark={bookmark} 
-                  curTab={curTab}
-                  bookmarkState={bookmarkState}
-                  setBookmarkState={setBookmarkState} 
-                  handleBookmarkPLay={handleBookmarkPLay}
-              />
+              {uiSetup[1] === 1 && 
+                <Bookmark 
+                    bookmark={bookmark} 
+                    curTab={curTab}
+                    bookmarkState={bookmarkState}
+                    setBookmarkState={setBookmarkState} 
+                    handleBookmarkPLay={handleBookmarkPLay}
+                />
+              }
           </motion.div>
           )
       })}

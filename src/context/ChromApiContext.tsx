@@ -11,6 +11,7 @@ import {
   } from '../utils'
 
 export interface ChromeContextProps {
+  allVideosWithBookmarks: { [key: string]: VideoElementInfo[] };
   allowedUrls: string[];
   curTab: { url: string; id: number };
   curSession: string;
@@ -24,6 +25,7 @@ export const ChromeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     const allowedUrls = useMemo(() => getAllowedUrls(), [])
 
+    const [allVideosWithBookmarks, setAllVideosWithBookmarks] = useState<{ [key: string]: VideoElementInfo[] }>({})
     const [curVideosWithBookmarks, setcurVideosWithBookmarks] = useState<{ [key: string]: VideoElementInfo[] | [] }>({ ['unavailable']: [] })
   
     const [curSession, setcurSession] = useState('')
@@ -74,8 +76,9 @@ export const ChromeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           console.log('SESSION', session)
           setcurSession(session)
           fetchVideos().then((videos) => {
+            console.log('VIDEOS from FETCH', videos)
             const typedVideos = videos as { [key: string]: VideoElementInfo[] | [] };
-            if (Object.keys(typedVideos).length === 0 || !Object.keys(typedVideos).includes(session)) {
+            if (Object.keys(typedVideos).length === 0) {
               typedVideos[session] = []
             }
             if (typedVideos[session] && typedVideos[session].length === 0) {
@@ -83,7 +86,7 @@ export const ChromeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
   
             console.log('VIDEOS', typedVideos)
-  
+            setAllVideosWithBookmarks(videos as { [key: string]: VideoElementInfo[] })
             setcurVideosWithBookmarks(typedVideos)
           })
         })
@@ -108,7 +111,7 @@ export const ChromeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [fetchVideos, fetchCurSession, fetchCurTab, curTab.id, curSession])
   
     return (
-      <ChromeContext.Provider value={{ curTab, curSession, curVideosWithBookmarks, allowedUrls }}>
+      <ChromeContext.Provider value={{ curTab, curSession, curVideosWithBookmarks, allowedUrls, allVideosWithBookmarks }}>
         {children}
       </ChromeContext.Provider>
     );

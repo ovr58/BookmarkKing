@@ -6,7 +6,7 @@
       "message": "Video, Music and Podcasts Bookmark Extension"
     },
     "extensionDescription": {
-      "message": "Extension for adding bookmarks is active on this list of platforms: YouTube, Youtube Music, VK, Spotify, Dzen."
+      "message": "Extension for adding bookmarks is active on this list of platforms: "
     },
     "addBookmark": {
       "message": "Add Bookmark"
@@ -172,5 +172,8 @@
     },
     "expandSelected": {
       "message": "expand/collapse selected"
+    },
+    "addFirstBookmark": {
+        "message": "Add your first bookmark"
     }
   }

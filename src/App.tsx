@@ -4,15 +4,19 @@ import {
   localizeContent, 
   openVideo,
 } from './utils'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import useChromeApi from './hooks/useChromeApi';
 import BookmarksContainer from './components/BookmarksContainer';
 import ThemeToggle from './components/ThemeToggle';
 import useTheme from './hooks/useTheme';
+import { useTagsMenu } from './hooks/useTagsMenu';
 
 function App() {
 
   const { curTab, curSession, curVideosWithBookmarks, allowedUrls } = useChromeApi()
+
+
+  const { setTagMenu } = useTagsMenu()
 
   const curTheme = useTheme()
 
@@ -31,6 +35,13 @@ function App() {
     openVideo(video)
   }
 
+  const handleTagsMenu = useCallback((e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('TAG MENU OPENED')
+      setTagMenu([], { x: e.clientX, y: e.clientY });
+    }, [setTagMenu]);
+
   return (
     <>
       <div id="extensionName" className="flex justify-between items-center p-2">
@@ -39,7 +50,10 @@ function App() {
         <ThemeToggle />
         
       </div>
-      <div id="container" className="container">
+      <div id="container" className="container" onContextMenu={(e) => {
+        e.preventDefault()
+        handleTagsMenu(e)
+      }}>
           <div>
               <div id="videos" className="videoslist">
                 <span className="font-bold text-[14px] p-2 text-dark dark:text-light" data-i18n="videosSelectTitle"></span>
@@ -93,21 +107,30 @@ function App() {
             <div className="block" id="bookmarks">
               {curVideosWithBookmarks[curSession] && curVideosWithBookmarks[curSession].length > 0 ? 
                 <BookmarksContainer 
+                  uiSetup={[1, 1, 1, 1]}
                   curSessionVideo={curVideosWithBookmarks[curSession]} 
                   curTab={curTab}
                 />
                 :
-                <div className="flex justify-center items-center w-full h-full">
+                <div className="w-full h-full">
+                  <BookmarksContainer 
+                    uiSetup={[1, 0, 0, 0]}
+                    curSessionVideo={[
+                      {
+                        id: curSession,
+                        time: 0,
+                        title: '',
+                        color: 'gray',
+                        class: 'default-class',
+                        rect: { width: 0, height: 0, top: 0, left: 0 },
+                        duration: 0,
+                        bookMarkCaption: chrome.i18n.getMessage('addFirstBookmark')
+                      }
+                    ]} 
+                    curTab={curTab}
+                  />
                   <div className="font-normal italic text-[12px] p-2 text-dark dark:text-light">
-                    {
-                      (() => {
-                        try {
-                          return chrome.i18n.getMessage('noBookmarks')
-                        } catch (error) {
-                          return 'No Bookmarks'
-                        }
-                      })()
-                    }
+                    {chrome.i18n.getMessage('noBookmarks')}
                   </div>
                 </div>
               }

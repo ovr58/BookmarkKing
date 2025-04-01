@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import AddBookmarkButton from "./AddBookmarkButton";
 
 interface UiContainerProps {
+    uiSetup: number[];
     bookmarkState: { [key: string]: {isOpen: boolean, isSelected: boolean, color: string} };
     handleSellectByCommand: (commandKey: string) => void;
     handleExpandByCommand: (commandKey: string) => void;
@@ -19,6 +20,7 @@ interface UiContainerProps {
 }
 
 const UiContainer: React.FC<UiContainerProps> = ({
+    uiSetup,
     bookmarkState,
     handleSellectByCommand,
     handleExpandByCommand,
@@ -55,21 +57,21 @@ const UiContainer: React.FC<UiContainerProps> = ({
             transition={{ duration: 0.2 }}
             key='select-expand-collapse-sort-motion'
         >
-            <AddBookmarkButton onClick={handleAddBookmark} />
-            <SelectAllButton 
+            {uiSetup[0] === 1 && <AddBookmarkButton onClick={handleAddBookmark} />}
+            {uiSetup[1] === 1 && <SelectAllButton 
                 onClick = {handleSellectByCommand}
                 isAnySelected={isAnySelected}
                 isAllSelected={isAllSelected}
                 colorsInUse={colorsInUse}                    
-            />
-            <ExpandCollapseButton 
+            />}
+            {uiSetup[2] === 1 && <ExpandCollapseButton 
                 onClick = {handleExpandByCommand}
                 isAnySelected={isAnySelected}
                 isAllExpanded={isAllExpanded}
                 isAnyExpanded={isAnyExpanded}
                 colorsInUse={colorsInUse}    
-            />
-            <SortButton onClick={setSortType} sortedOrder={sortedOrder}/>
+            />}
+            {uiSetup[3] === 1 && <SortButton onClick={setSortType} sortedOrder={sortedOrder}/>}
         </motion.div>
         {isAnySelected &&
         <motion.div

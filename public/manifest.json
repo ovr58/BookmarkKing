@@ -3,14 +3,23 @@
   "version": "1.1.0",
   "description": "All your video and podcast bookmarks in one place. Support for YouTube, Spotify, YouTube Music, Dzen, VKVideo... Add your platform, contact the developer...",
   "default_locale": "en",
-  "permissions": ["storage", "tabs", "scripting", "notifications"],
+  "permissions": [
+    "storage", 
+    "tabs", 
+    "scripting", 
+    "notifications",
+    "contextMenus",
+    "sidePanel"
+  ],
   "host_permissions": [
     "https://open.spotify.com/*",
     "https://*.youtube.com/*",
     "https://music.youtube.com/*",
     "https://*.vkvideo.ru/*",
+    "https://vkvideo.ru/*",
     "https://*.vk.com/*",
     "https://*.dzen.ru/*",
+    "https://dzen.ru/*",
     "https://*.linkedin.com/learning/*"
   ],
   "background": {
@@ -70,6 +79,9 @@
     },
     "default_title": "Video, Music and Podcasts Bookmark Extension",
     "default_popup": "index.html"
+  },
+  "side_panel": {
+    "default_path": "side-panel.html"
   },
   "manifest_version": 3
 }

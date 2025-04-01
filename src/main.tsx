@@ -4,6 +4,7 @@ import App from './App.tsx'
 import { ChromeProvider } from './context/ChromApiContext.tsx'
 import './index.css'
 import { MenuProvider } from './context/ContextMenuContext.tsx'
+import { TagsProvider } from './context/TagsMenuContext.tsx'
 
 const $root = document.getElementById('root')!
 
@@ -13,7 +14,9 @@ ReactDOM.createRoot($root).render(
   <React.StrictMode>
     <ChromeProvider>
       <MenuProvider>
-        <App />
+        <TagsProvider>
+          <App />
+        </TagsProvider>
       </MenuProvider>
     </ChromeProvider>
   </React.StrictMode>,
